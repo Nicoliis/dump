@@ -1,0 +1,154 @@
+/* ==================== FILTER CHIPS ==================== */
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  gap: 5px;
+  padding: 4px 0;
+}
+
+.filter-chip {
+  position: relative;
+}
+
+.filter-chip-btn {
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  min-height: 0;
+  margin: 0;
+  line-height: 1.6;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.filter-chip-btn:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  transform: none;
+}
+
+.filter-chip.open > .filter-chip-btn,
+.filter-chip-btn.has-value {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--bg-quaternary);
+}
+
+.chip-dot {
+  display: none;
+  font-weight: bold;
+  margin-left: 1px;
+}
+
+.chip-clear {
+  border-color: var(--primary-red) !important;
+  color: var(--primary-red) !important;
+}
+
+.chip-clear:hover {
+  background: var(--primary-red) !important;
+  color: white !important;
+}
+
+.filter-chip-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 200;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  padding: 10px;
+  min-width: 190px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+
+.filter-chip.open .filter-chip-dropdown {
+  display: block;
+}
+
+.filter-chip-dropdown input,
+.filter-chip-dropdown .styled-select {
+  width: 100%;
+  padding: 5px 7px;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+
+.filter-chip-dropdown input:focus,
+.filter-chip-dropdown .styled-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* Type token checklist */
+.type-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.type-token {
+  padding: 3px 9px;
+  border-radius: 12px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.78rem;
+  min-height: 0;
+  margin: 0;
+  line-height: 1.5;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.type-token:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+  transform: none;
+}
+
+.type-token.selected {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--bg-primary);
+}
+
+.token-separator {
+  width: 100%;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-secondary);
+  margin-top: 2px;
+}
+
+.filter-chip-dropdown--wide {
+  min-width: 210px;
+}
+
+.filter-chip-dropdown--wide label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.filter-chip-dropdown--wide label + label {
+  margin-top: 6px;
+}

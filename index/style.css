@@ -1,0 +1,66 @@
+.hero {
+      padding: 4rem 0 2.5rem;
+      text-align: center;
+    }
+    .hero h1 { font-size: 2.8rem; margin-bottom: .6rem; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+      padding: 2rem 0 4rem;
+    }
+
+    .tool-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+      box-shadow: var(--shadow);
+    }
+    .tool-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(124,106,247,.18);
+      color: var(--text);
+    }
+
+    .tool-icon {
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+
+    .tool-card h2 {
+      font-size: 1.2rem;
+      margin: 0;
+    }
+
+    .tool-card p {
+      font-size: .9rem;
+      color: var(--text-muted);
+      margin: 0;
+      flex: 1;
+    }
+
+    .tool-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-top: .25rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: .85rem;
+    }

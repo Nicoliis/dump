@@ -1,0 +1,287 @@
+/* ==================== IMPORT COMPONENTS ==================== */
+
+/* --- Tabs --- */
+.import-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.import-tabs button {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 5px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border-secondary);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.import-tabs button:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transform: none;
+}
+
+.import-tabs button.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--bg-primary);
+  font-weight: 600;
+}
+
+/* --- Tab content area --- */
+.import-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* --- Textarea --- */
+.import-textarea {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  min-height: 130px;
+  transition: border-color 0.15s;
+}
+
+.import-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.import-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* --- File upload zone --- */
+.file-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 20px 12px;
+  border: 2px dashed var(--border-primary);
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.file-upload-zone:hover {
+  border-color: var(--color-accent);
+  background: var(--bg-quaternary);
+}
+
+.file-upload-zone input[type="file"] {
+  display: none;
+}
+
+.file-upload-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.file-upload-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.file-upload-name {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.file-upload-zone.has-file {
+  border-color: var(--color-accent);
+  border-style: solid;
+}
+
+.file-upload-zone.has-file .file-upload-name {
+  color: var(--color-accent);
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* --- Description text under file zone --- */
+.import-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* --- Preview section --- */
+.import-preview {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border-secondary);
+  padding-top: 10px;
+  margin-top: 2px;
+}
+
+.import-preview h4 {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* --- Destination selector (radios as pills) --- */
+.import-destination {
+  display: flex;
+  gap: 6px;
+}
+
+.dest-option input[type="radio"] {
+  display: none;
+}
+
+.dest-option span {
+  display: block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.dest-option input:checked + span {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--bg-primary);
+  font-weight: 600;
+}
+
+/* --- Deck group checkboxes --- */
+.deck-group-selector {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.deck-group-selector label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* --- Card list in preview --- */
+.import-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.import-card-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  padding: 2px 0;
+}
+
+.import-card-status {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.import-card-status.found {
+  background: #4caf50;
+}
+
+.import-card-status.not-found {
+  background: var(--primary-red);
+}
+
+.import-card-name {
+  flex: 1;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-card-name.not-found {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.import-card-qty {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.import-card-list-summary {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding-top: 5px;
+  border-top: 1px solid var(--border-secondary);
+  margin-top: 2px;
+}
+
+/* Collection import summary */
+.import-collection-summary {
+  display: flex;
+  justify-content: space-around;
+  padding: 14px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.import-collection-summary span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* --- Action buttons at bottom of preview --- */
+.import-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.import-actions button {
+  flex: 1;
+}

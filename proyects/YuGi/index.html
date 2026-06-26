@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Yu-Gi-Oh! Deck Builder - Nicolás Edition</title>
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/buttons.css" />
+    <link rel="stylesheet" href="css/forms.css" />
+    <link rel="stylesheet" href="css/filter.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/collection-card.css" />
+    <link rel="stylesheet" href="css/deck-group.css" />
+    <link rel="stylesheet" href="css/modal.css" />
+    <link rel="stylesheet" href="css/panels.css" />
+    <link rel="stylesheet" href="css/import.css" />
+</head>
+<body>
+    <div class="panel-left" id="importPanel">
+        <div class="panel-handle" id="importPanelHandle" onclick="togglePanel('import')" aria-label="Toggle Import Panel"><</div>
+        <div class="panel-body">
+<!-- Consolidated Import Section -->
+            <div class="section-header">
+                <h2>Import & Search Cards</h2>
+            </div>
+            <div class="import-tabs" id="importPanelHeader">
+                <button class="active" onclick="switchImportTab('search')" id="searchTab">Search</button>
+                <button onclick="switchImportTab('bulk')" id="bulkTab">Bulk Add</button>
+                <button onclick="switchImportTab('ydk')" id="ydkTab">YDK</button>
+                <button onclick="switchImportTab('csv')" id="csvTab">CSV</button>
+                <button onclick="switchImportTab('collection')" id="collectionTab">JSON</button>
+            </div>
+            <div id="importPanelContent">
+
+                <!-- Search Tab -->
+                <div id="searchTabContent" class="import-content">
+                    <div class="input-row">
+                        <input type="text" id="searchInput" class="search" placeholder="Card name (e.g. Ash Blossom)" onkeypress="if(event.key==='Enter') searchCards()">
+                        <button class="primary" onclick="searchCards()">Search</button>
+                    </div>
+                    <label class="input-row" style="gap: 6px; margin: 0; cursor: pointer;">
+                        <input type="checkbox" id="collectionOnly" onchange="renderCollectionToggle()">
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Collection only</span>
+                        <span id="collectionCount" style="color: var(--text-muted); font-size: 0.8rem; margin-left: auto;"></span>
+                    </label>
+                    <div id="searchResults" class="card-list" style="overflow-y: auto; max-height: 470px;"></div>
+                </div>
+
+                <!-- Bulk Add Tab -->
+                <div id="bulkTabContent" class="import-content" style="display: none;">
+                    <textarea id="bulkAddTextarea" class="import-textarea"
+                        placeholder="One card name per line, e.g.&#10;Ash Blossom &amp; Joyous Spring&#10;Effect Veiler&#10;Called by the Grave"
+                        rows="7"></textarea>
+                    <button class="primary" id="processBulkBtn" onclick="ImportUI.processBulk()">Process</button>
+
+                    <div id="bulkPreview" class="import-preview">
+                        <h4>Preview — choose destination</h4>
+                        <div class="import-destination">
+                            <label class="dest-option">
+                                <input type="radio" name="bulkDestination" value="collection" checked>
+                                <span>Collection</span>
+                            </label>
+                            <label class="dest-option">
+                                <input type="radio" name="bulkDestination" value="deck">
+                                <span>Deck Groups</span>
+                            </label>
+                        </div>
+                        <div id="deckGroupSelector" class="deck-group-selector">
+                            <div id="groupCheckboxes"></div>
+                        </div>
+                        <div id="bulkCardList" class="import-card-list"></div>
+                        <div class="import-actions">
+                            <button class="primary" onclick="ImportUI.confirmBulk()">Confirm Import</button>
+                            <button class="secondary" onclick="ImportUI.cancelBulk()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YDK Import Tab -->
+                <div id="ydkTabContent" class="import-content" style="display: none;">
+                    <label class="file-upload-zone" for="ydkImportInput">
+                        <span class="file-upload-icon">📂</span>
+                        <span class="file-upload-text">Choose a .ydk file</span>
+                        <span class="file-upload-name" id="ydkFileName">No file selected</span>
+                        <input type="file" id="ydkImportInput" accept=".ydk" onchange="ImportUI.processYDK(event)">
+                    </label>
+
+                    <div id="ydkPreview" class="import-preview">
+                        <h4>Preview — choose destination</h4>
+                        <div class="import-destination">
+                            <label class="dest-option">
+                                <input type="radio" name="ydkDestination" value="collection" checked>
+                                <span>Collection</span>
+                            </label>
+                            <label class="dest-option">
+                                <input type="radio" name="ydkDestination" value="deck">
+                                <span>Deck Groups</span>
+                            </label>
+                        </div>
+                        <div id="ydkGroupSelector" class="deck-group-selector">
+                            <div id="ydkGroupCheckboxes"></div>
+                        </div>
+                        <div id="ydkCardList" class="import-card-list"></div>
+                        <div class="import-actions">
+                            <button class="primary" onclick="ImportUI.confirmYDK()">Confirm Import</button>
+                            <button class="secondary" onclick="ImportUI.cancelYDK()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collection JSON Import Tab -->
+                <div id="collectionTabContent" class="import-content" style="display: none;">
+                    <label class="file-upload-zone" for="collectionImportInput">
+                        <span class="file-upload-icon">📦</span>
+                        <span class="file-upload-text">Choose a collection .json file</span>
+                        <span class="file-upload-name" id="collectionFileName">No file selected</span>
+                        <input type="file" id="collectionImportInput" accept=".json" onchange="ImportUI.processCollection(event)">
+                    </label>
+                    <p class="import-desc">Import a previously exported collection. Cards will be merged (quantities added).</p>
+
+                    <div id="collectionPreview" class="import-preview">
+                        <h4>Preview — will be merged into collection</h4>
+                        <div id="collectionCardList" class="import-card-list"></div>
+                        <div class="import-actions">
+                            <button class="primary" onclick="ImportUI.confirmCollection()">Confirm Import</button>
+                            <button class="secondary" onclick="ImportUI.cancelCollection()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CSV Import Tab -->
+                <div id="csvTabContent" class="import-content" style="display: none;">
+                    <label class="file-upload-zone" for="csvImportInput">
+                        <span class="file-upload-icon">📋</span>
+                        <span class="file-upload-text">Choose a .csv file</span>
+                        <span class="file-upload-name" id="csvFileName">No file selected</span>
+                        <input type="file" id="csvImportInput" accept=".csv" onchange="ImportUI.processCSV(event)">
+                    </label>
+                    <p class="import-desc">Expected columns: cardname, cardq, cardrarity, card_edition, cardset, cardcode, <strong>cardid</strong>, print_id</p>
+
+                    <div id="csvPreview" class="import-preview">
+                        <h4>Preview — choose destination</h4>
+                        <div class="import-destination">
+                            <label class="dest-option">
+                                <input type="radio" name="csvDestination" value="collection" checked>
+                                <span>Collection</span>
+                            </label>
+                            <label class="dest-option">
+                                <input type="radio" name="csvDestination" value="deck">
+                                <span>Deck Groups</span>
+                            </label>
+                        </div>
+                        <div id="csvGroupSelector" class="deck-group-selector">
+                            <div id="csvGroupCheckboxes"></div>
+                        </div>
+                        <div id="csvCardList" class="import-card-list"></div>
+                        <div class="import-actions">
+                            <button class="primary" onclick="ImportUI.confirmCSV()">Confirm Import</button>
+                            <button class="secondary" onclick="ImportUI.cancelCSV()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-right" id="collectionPanel">
+        <div class="panel-handle" id="collectionPanelHandle" onclick="togglePanel('collection')" aria-label="Toggle Collection Panel">></div>
+        <div class="panel-body">
+        <!-- Collection Management -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h2>My Collection</h2>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <button class="danger" id="clearFiltersChip" onclick="clearCollectionFilters()" style="display: none;">Clear ×</button>
+                    <button id="toggleCollectionFiltersBtn" class="secondary" onclick="toggleCollectionFilters()">Show Filters</button>
+                </div>
+            </div>
+            <div class="section-actions">
+                <button class="primary" onclick="showCollectionView()">View Collection</button>
+                <button class="secondary" onclick="exportCollection()">Export</button>
+                <button class="danger" onclick="clearCollection()">Erase All</button>
+            </div>
+            <div id="collectionStats" style="color: #aaa; margin-bottom: 10px;"></div>
+
+            <div class="filter-chips" id="collectionFilterPanel" style="display: none;">
+
+                <!-- Name -->
+                <div class="filter-chip" id="chip-name">
+                    <button class="filter-chip-btn" onclick="CollectionUI.toggleChip('name'); event.stopPropagation()">Name<span class="chip-dot" id="chip-name-dot">*</span></button>
+                    <div class="filter-chip-dropdown" onclick="event.stopPropagation()">
+                        <input type="text" id="collectionName" placeholder="e.g. Ash Blossom" oninput="CollectionUI.onFilterChange('name')">
+                    </div>
+                </div>
+
+                <!-- Type -->
+                <div class="filter-chip" id="chip-type">
+                    <button class="filter-chip-btn" onclick="CollectionUI.toggleChip('type'); event.stopPropagation()">Type<span class="chip-dot" id="chip-type-dot">*</span></button>
+                    <div class="filter-chip-dropdown" onclick="event.stopPropagation()">
+                        <div id="type-tokens-container" class="type-tokens"></div>
+                    </div>
+                </div>
+
+                <!-- Level -->
+                <div class="filter-chip" id="chip-level">
+                    <button class="filter-chip-btn" onclick="CollectionUI.toggleChip('level'); event.stopPropagation()">Level<span class="chip-dot" id="chip-level-dot">*</span></button>
+                    <div class="filter-chip-dropdown" onclick="event.stopPropagation()">
+                        <input type="text" id="collectionLevelRange" placeholder="e.g. 1-8 or 4" oninput="CollectionUI.onFilterChange('level')">
+                    </div>
+                </div>
+
+                <!-- Attribute -->
+                <div class="filter-chip" id="chip-attribute">
+                    <button class="filter-chip-btn" onclick="CollectionUI.toggleChip('attribute'); event.stopPropagation()">Attribute<span class="chip-dot" id="chip-attribute-dot">*</span></button>
+                    <div class="filter-chip-dropdown" onclick="event.stopPropagation()">
+                        <select id="collectionAttribute" onchange="CollectionUI.onFilterChange('attribute')" class="styled-select">
+                            <option value="">Any</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Race -->
+                <div class="filter-chip" id="chip-race">
+                    <button class="filter-chip-btn" onclick="CollectionUI.toggleChip('race'); event.stopPropagation()">Race<span class="chip-dot" id="chip-race-dot">*</span></button>
+                    <div class="filter-chip-dropdown" onclick="event.stopPropagation()">
+                        <select id="collectionRace" onchange="CollectionUI.onFilterChange('race')" class="styled-select">
+                            <option value="">Any</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Archetype -->
+                <div class="filter-chip" id="chip-archetype">
+                    <button class="filter-chip-btn" onclick="CollectionUI.toggleChip('archetype'); event.stopPropagation()">Archetype<span class="chip-dot" id="chip-archetype-dot">*</span></button>
+                    <div class="filter-chip-dropdown" onclick="event.stopPropagation()">
+                        <input type="text" id="collectionArchetype" placeholder="e.g. Aroma" oninput="CollectionUI.onFilterChange('archetype')">
+                    </div>
+                </div>
+
+                <!-- ATK -->
+                <div class="filter-chip" id="chip-atk">
+                    <button class="filter-chip-btn" onclick="CollectionUI.toggleChip('atk'); event.stopPropagation()">ATK<span class="chip-dot" id="chip-atk-dot">*</span></button>
+                    <div class="filter-chip-dropdown" onclick="event.stopPropagation()">
+                        <input type="text" id="collectionAtkRange" placeholder="e.g. 1000-3000" oninput="CollectionUI.onFilterChange('atk')">
+                    </div>
+                </div>
+
+                <!-- DEF -->
+                <div class="filter-chip" id="chip-def">
+                    <button class="filter-chip-btn" onclick="CollectionUI.toggleChip('def'); event.stopPropagation()">DEF<span class="chip-dot" id="chip-def-dot">*</span></button>
+                    <div class="filter-chip-dropdown" onclick="event.stopPropagation()">
+                        <input type="text" id="collectionDefRange" placeholder="e.g. 500-2000" oninput="CollectionUI.onFilterChange('def')">
+                    </div>
+                </div>
+
+                <!-- Count -->
+                <div class="filter-chip" id="chip-count">
+                    <button class="filter-chip-btn" onclick="CollectionUI.toggleChip('count'); event.stopPropagation()">Count<span class="chip-dot" id="chip-count-dot">*</span></button>
+                    <div class="filter-chip-dropdown" onclick="event.stopPropagation()">
+                        <input type="text" id="collectionCountRange" placeholder="e.g. 1-3 or 2" oninput="CollectionUI.onFilterChange('count')">
+                    </div>
+                </div>
+
+                <!-- Sort -->
+                <div class="filter-chip" id="chip-sort">
+                    <button class="filter-chip-btn" onclick="CollectionUI.toggleChip('sort'); event.stopPropagation()">Sort<span class="chip-dot" id="chip-sort-dot">*</span></button>
+                    <div class="filter-chip-dropdown filter-chip-dropdown--wide" onclick="event.stopPropagation()">
+                        <label>Sort by
+                            <select id="collectionSort1" onchange="CollectionUI.onFilterChange('sort')" class="styled-select">
+                                <option value="name">Name</option>
+                                <option value="type">Type</option>
+                                <option value="attribute">Attribute</option>
+                                <option value="race">Race</option>
+                                <option value="level">Level</option>
+                                <option value="atk">ATK</option>
+                                <option value="def">DEF</option>
+                                <option value="count">Count</option>
+                            </select>
+                        </label>
+                        <label>Then by
+                            <select id="collectionSort2" onchange="CollectionUI.onFilterChange('sort')" class="styled-select">
+                                <option value="">None</option>
+                                <option value="name">Name</option>
+                                <option value="type">Type</option>
+                                <option value="attribute">Attribute</option>
+                                <option value="race">Race</option>
+                                <option value="level">Level</option>
+                                <option value="atk">ATK</option>
+                                <option value="def">DEF</option>
+                                <option value="count">Count</option>
+                            </select>
+                        </label>
+                        <label>Order
+                            <select id="collectionOrder" onchange="CollectionUI.onFilterChange('sort')" class="styled-select">
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Clear -->
+
+            </div>
+
+            <div id="collectionView" class="card-list" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="panel-center">
+        
+        <!-- Deck Builder -->
+        <div class="section">
+            <div class="section-actions">
+                <h2>Current Deck</h2>
+                <button class="primary" onclick="exportYDK()">Export .ydk</button>
+                <button class="secondary" onclick="importYDK()">Import .ydk</button>
+                <input type="file" id="ydkInput" style="display:none" accept=".ydk" onchange="handleYDKImport(event)">
+                <div class="stats">
+                    Total: <span id="totalCards">0</span>
+                </div>
+            </div>
+            <div id="deckArea" class="deck"></div>
+        </div>
+
+    <!-- Card Detail Modal -->
+    <div id="cardModal" class="modal" style="display: none;" onclick="if(event.target === this) closeCardModal()">
+        <div class="modal-content">
+            <span class="close" onclick="closeCardModal()">&times;</span>
+            <div id="modalCardContent">
+                <!-- Card content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Foundation Modules -->
+    <script src="src/core/storage.js"></script>
+    <script src="src/core/card-database.js"></script>
+    <script src="src/core/api.js"></script>
+    <script src="src/core/state.js"></script>
+    <script src="src/core/card-utils.js"></script>
+    <script src="src/core/ui-utils.js"></script>
+
+    <!-- Domain Business Logic -->
+    <script src="src/domain/card-relations.js"></script>
+    <script src="src/domain/deck.js"></script>
+    <script src="src/domain/collection.js"></script>
+    <script src="src/domain/search.js"></script>
+
+    <!-- UI Presentation Layer -->
+    <script src="src/ui/deck.js"></script>
+    <script src="src/ui/search.js"></script>
+    <script src="src/ui/collection.js"></script>
+    <script src="src/ui/modal.js"></script>
+
+    <!-- Import/Export & Initialization -->
+    <script src="src/imports/handler.js"></script>
+    <script src="src/ui/import.js"></script>
+    <script src="src/init.js"></script>
+</body>
+</html>

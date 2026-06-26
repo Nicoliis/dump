@@ -1,0 +1,86 @@
+/* ==================== CARD COMPONENTS ==================== */
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 2px;
+  margin: 2px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  background: var(--bg-card);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card img {
+  width: 90px;
+  height: 126px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.card-buttons {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.card:hover .card-buttons {
+  opacity: 1;
+}
+
+.card-button {
+  padding: 2px 3px;
+  font-size: 0.75em;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+
+/* ==================== LISTS & CONTAINERS ==================== */
+.card-list,
+.collection-list,
+.deck {
+  /* max-height: 420px; */
+  /*overflow-y: auto;*/
+  background: var(--bg-tertiary);
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+}
+
+.collection-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  padding: 6px !important;
+}
+
+.collection-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.collection-controls button {
+  margin: 0;
+}

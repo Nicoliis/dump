@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StoryForge</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">StoryForge</div>
+    <nav class="menu" id="menu"></nav>
+    <div class="new-group" id="btn-new-group">+ New Group</div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <input class="search" id="search-input" type="text" placeholder="Search...">
+      </div>
+      <div class="topbar-right">
+        <span id="current-path">Home</span>
+        <button class="btn-mode" id="btn-mode">Edit Mode</button>
+        <button class="btn-secondary" id="btn-export">Export XML</button>
+        <button class="btn-secondary" id="btn-import">Import XML</button>
+        <input type="file" id="import-file" accept=".xml" style="display:none">
+      </div>
+    </header>
+    <main class="content" id="main-content"></main>
+  </div>
+
+  <script src="lib/marked.min.js"></script>
+  <script src="lib/UI.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/xml.js"></script>
+  <script src="js/markdown.js"></script>
+  <script src="js/components/md-panel.js"></script>
+  <script src="js/components/item-card.js"></script>
+  <script src="js/components/ref-editor.js"></script>
+  <script src="js/components/parent-editor.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/views/home.js"></script>
+  <script src="js/views/list.js"></script>
+  <script src="js/views/dag.js"></script>
+  <script src="js/views/graph.js"></script>
+  <script src="js/views/text.js"></script>
+  <script src="js/views/detail-actions.js"></script>
+  <script src="js/views/detail.js"></script>
+  <script src="js/views/new-group.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

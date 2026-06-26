@@ -1,0 +1,142 @@
+:root {
+  --panel-width: 340px;
+  --panel-collapsed-width: 40px;
+  --panel-gap: 20px;
+}
+
+.panel-left,
+.panel-right {
+  position: fixed;
+  top: 10px;
+  bottom: 10px;
+  width: var(--panel-width);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 18px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+}
+
+.panel-left {
+  left: 10px;
+}
+
+.panel-right {
+  right: 10px;
+}
+
+.panel-center {
+  margin: 10px calc(var(--panel-width) + var(--panel-gap));
+  min-height: calc(100vh - 20px);
+  padding: 10px 0;
+  min-width: 320px;
+}
+
+.panel-left .panel-body,
+.panel-right .panel-body {
+  flex: 1;
+  min-height: 0;
+}
+
+.panel-handle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 72px;
+  border-radius: 999px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  user-select: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+  z-index: 5;
+}
+
+.panel-left .panel-handle {
+  right: -16px;
+}
+
+.panel-right .panel-handle {
+  left: -16px;
+}
+
+.panel-left.collapsed,
+.panel-right.collapsed {
+  width: var(--panel-collapsed-width);
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.panel-left.collapsed .panel-body,
+.panel-right.collapsed .panel-body {
+  display: none;
+}
+
+.panel-left.collapsed .panel-handle {
+  right: 0;
+}
+
+.panel-right.collapsed .panel-handle {
+  left: 0;
+}
+
+.panel-left.collapsed .panel-handle:hover,
+.panel-right.collapsed .panel-handle:hover {
+  background: var(--bg-secondary);
+}
+
+.panel-left .section,
+.panel-right .section {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.panel-left .panel-body > .section,
+.panel-right .panel-body > .section {
+  background: var(--bg-secondary);
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border-primary);
+}
+
+@media (max-width: 1120px) {
+  .panel-left,
+  .panel-right,
+  .panel-center {
+    position: static;
+    width: auto;
+    margin: 0;
+    box-shadow: none;
+  }
+
+  .panel-center {
+    margin-top: 20px;
+  }
+
+  .panel-left.collapsed,
+  .panel-right.collapsed {
+    width: auto;
+  }
+
+  .panel-handle {
+    position: static;
+    transform: none;
+    margin: 10px auto;
+  }
+}

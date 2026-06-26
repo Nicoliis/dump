@@ -1,0 +1,38 @@
+/* ==================== CSS VARIABLES & COLORS ==================== */
+:root {
+  /* Primary Colors */
+  --color-accent: #4a90e2;
+  --primary-red: #b71c1c;
+  --primary-red-hover: #d32f2f;
+  --primary-blue: #2196f3;
+  --primary-blue-hover: #42a5f5;
+  --primary-blue-dark: #1976d2;
+
+  /* Background Colors */
+  --bg-primary: #111;
+  --bg-secondary: #222;
+  --bg-tertiary: #333;
+  --bg-quaternary: #2a2a2a;
+  --bg-card: #444;
+  --bg-card-hover: #666;
+  --bg-filter: #262626;
+  --bg-modal-overlay: rgba(0, 0, 0, 0.8);
+
+  /* Text Colors */
+  --text-primary: #eee;
+  --text-secondary: #ccc;
+  --text-muted: #aaa;
+  --text-error: #f44336;
+
+  /* Border Colors */
+  --border-primary: #555;
+  --border-secondary: #444;
+  --border-accent: #ffd700;
+  --border-dashed: #555;
+
+  /* Utility Colors */
+  --success-green: #4caf50;
+  --warning-orange: #ff9800;
+  --gray-light: #777;
+  --gray-medium: #607d8b;
+}
