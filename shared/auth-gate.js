@@ -1,0 +1,186 @@
+/**
+ * Nicotols — Auth Gate
+ *
+ * Locks a page behind login: nothing is shown until the user is signed in.
+ * Self-contained — injects its own styles, so it works on any page regardless
+ * of that page's CSS. Single sign-on: because every page shares the same
+ * Supabase session (same origin → shared localStorage), logging in on one
+ * page unlocks all of them.
+ *
+ * SECURITY NOTE: this is a UX gate, not real access control. A static site
+ * can't truly hide its source. Actual data protection comes from Supabase
+ * Row-Level Security. See docs/STORAGE.md.
+ *
+ * Usage — add to <head> of any page, after config.js + auth.js:
+ *   <script src="../../shared/auth-gate.js"></script>
+ *   <script>AuthGate.protect();</script>
+ */
+
+const AuthGate = (() => {
+  let _mode = 'signin';
+  let _gate = null;
+
+  // Hide page content immediately to prevent a flash before auth resolves.
+  const _hideStyle = document.createElement('style');
+  _hideStyle.id = 'auth-gate-hide';
+  _hideStyle.textContent =
+    'body{visibility:hidden!important}' +
+    'html.auth-gate-ready body{visibility:visible!important}';
+  (document.head || document.documentElement).appendChild(_hideStyle);
+
+  function _injectStyles() {
+    if (document.getElementById('auth-gate-style')) return;
+    const s = document.createElement('style');
+    s.id = 'auth-gate-style';
+    s.textContent = `
+      #auth-gate {
+        position: fixed; inset: 0; z-index: 999999;
+        display: flex; align-items: center; justify-content: center;
+        padding: 1rem; visibility: visible;
+        background: #0f1117;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        color: #e7e9ee;
+      }
+      #auth-gate * { box-sizing: border-box; }
+      .ag-card {
+        width: 100%; max-width: 380px;
+        background: #1a1d27; border: 1px solid #2b2f3a;
+        border-radius: 16px; padding: 2rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      }
+      .ag-brand { font-size: 1.6rem; font-weight: 800; text-align: center; margin: 0 0 .25rem; }
+      .ag-brand span { color: #7c6cff; }
+      .ag-sub { text-align: center; color: #8b90a0; font-size: .9rem; margin: 0 0 1.5rem; }
+      .ag-card h2 { font-size: 1.15rem; margin: 0 0 1.25rem; }
+      .ag-field { margin-bottom: 1rem; }
+      .ag-field label { display: block; font-size: .8rem; color: #8b90a0; margin-bottom: .35rem; }
+      .ag-field input {
+        width: 100%; padding: .65rem .8rem; border-radius: 8px;
+        background: #0f1117; border: 1px solid #2b2f3a; color: #e7e9ee;
+        font-size: .95rem; outline: none;
+      }
+      .ag-field input:focus { border-color: #7c6cff; }
+      .ag-btn {
+        width: 100%; padding: .7rem; border: none; border-radius: 8px;
+        background: #7c6cff; color: #fff; font-size: .95rem; font-weight: 600;
+        cursor: pointer; transition: opacity .15s;
+      }
+      .ag-btn:hover { opacity: .9; }
+      .ag-btn:disabled { opacity: .6; cursor: default; }
+      .ag-toggle { text-align: center; font-size: .85rem; color: #8b90a0; margin: 1.25rem 0 0; }
+      .ag-toggle a { color: #7c6cff; cursor: pointer; text-decoration: none; }
+      .ag-msg { border-radius: 8px; padding: .6rem .8rem; font-size: .85rem; margin-bottom: 1rem; }
+      .ag-msg.err { background: rgba(255,90,90,.12); border: 1px solid #ff5a5a; color: #ff8c8c; }
+      .ag-msg.ok  { background: rgba(70,200,120,.12); border: 1px solid #46c878; color: #6fe0a0; }
+      .ag-hidden { display: none !important; }
+    `;
+    document.head.appendChild(s);
+  }
+
+  function _build() {
+    _injectStyles();
+    const el = document.createElement('div');
+    el.id = 'auth-gate';
+    el.innerHTML = `
+      <div class="ag-card">
+        <p class="ag-brand">Nico<span>tools</span></p>
+        <p class="ag-sub">Sign in to access your tools</p>
+
+        <div id="ag-msg" class="ag-msg ag-hidden"></div>
+
+        <form id="ag-form" novalidate>
+          <div class="ag-field">
+            <label for="ag-email">Email</label>
+            <input id="ag-email" type="email" autocomplete="email" placeholder="you@example.com" required />
+          </div>
+          <div class="ag-field">
+            <label for="ag-password">Password</label>
+            <input id="ag-password" type="password" autocomplete="current-password" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="ag-btn" id="ag-submit">Sign in</button>
+        </form>
+
+        <p class="ag-toggle">
+          <span id="ag-toggle-text">Don't have an account?</span>
+          <a id="ag-toggle-link">Sign up</a>
+        </p>
+      </div>
+    `;
+    return el;
+  }
+
+  function _setMode(mode) {
+    _mode = mode;
+    _gate.querySelector('#ag-submit').textContent      = mode === 'signin' ? 'Sign in' : 'Sign up';
+    _gate.querySelector('#ag-toggle-text').textContent = mode === 'signin' ? "Don't have an account?" : 'Already have one?';
+    _gate.querySelector('#ag-toggle-link').textContent = mode === 'signin' ? 'Sign up' : 'Sign in';
+    _gate.querySelector('#ag-password').autocomplete   = mode === 'signin' ? 'current-password' : 'new-password';
+    _msg(null);
+  }
+
+  function _msg(text, kind = 'err') {
+    const m = _gate.querySelector('#ag-msg');
+    if (!text) { m.classList.add('ag-hidden'); return; }
+    m.textContent = text;
+    m.className = 'ag-msg ' + kind;
+  }
+
+  function _show() {
+    if (document.getElementById('auth-gate')) return;
+    _gate = _build();
+    document.documentElement.appendChild(_gate);
+    document.documentElement.classList.add('auth-gate-ready'); // reveal (gate covers everything anyway)
+
+    _gate.querySelector('#ag-toggle-link').onclick = () =>
+      _setMode(_mode === 'signin' ? 'signup' : 'signin');
+
+    _gate.querySelector('#ag-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      _msg(null);
+      const email = _gate.querySelector('#ag-email').value.trim();
+      const password = _gate.querySelector('#ag-password').value;
+      const btn = _gate.querySelector('#ag-submit');
+      btn.disabled = true;
+      btn.textContent = _mode === 'signin' ? 'Signing in…' : 'Signing up…';
+
+      const fn = _mode === 'signin' ? Auth.signIn : Auth.signUp;
+      const { error } = await fn(email, password);
+
+      btn.disabled = false;
+      btn.textContent = _mode === 'signin' ? 'Sign in' : 'Sign up';
+
+      if (error) {
+        _msg(error.message, 'err');
+      } else if (_mode === 'signup') {
+        _msg('Account created. If email confirmation is on, check your inbox, then sign in.', 'ok');
+        _setMode('signin');
+        _msg('Account created. Now sign in.', 'ok');
+      }
+      // on successful sign-in, onChange removes the gate automatically
+    });
+  }
+
+  function _hide() {
+    if (_gate) { _gate.remove(); _gate = null; }
+    document.documentElement.classList.add('auth-gate-ready'); // reveal page content
+  }
+
+  async function protect() {
+    if (!Auth.isConfigured()) {
+      // No backend configured — fail safe by showing the gate with a notice
+      await Auth.init();
+      _show();
+      _msg('Login is not configured yet (shared/config.js).', 'err');
+      return;
+    }
+    await Auth.init();
+    Auth.onChange(({ user }) => {
+      if (user) _hide();
+      else _show();
+    });
+  }
+
+  return { protect };
+})();
+
+window.AuthGate = AuthGate;

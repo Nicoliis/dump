@@ -14,6 +14,13 @@
     <link rel="stylesheet" href="css/modal.css" />
     <link rel="stylesheet" href="css/panels.css" />
     <link rel="stylesheet" href="css/import.css" />
+
+    <!-- Nicotols login gate -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../shared/config.js"></script>
+    <script src="../../shared/auth.js"></script>
+    <script src="../../shared/auth-gate.js"></script>
+    <script>AuthGate.protect();</script>
 </head>
 <body>
     <div class="panel-left" id="importPanel">

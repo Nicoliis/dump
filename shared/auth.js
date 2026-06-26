@@ -30,7 +30,15 @@ const Auth = (() => {
     _listeners.forEach(fn => fn({ user: _user }));
   }
 
+  let _initPromise = null;
+
   async function init() {
+    if (_initPromise) return _initPromise;
+    _initPromise = _doInit();
+    return _initPromise;
+  }
+
+  async function _doInit() {
     if (!_configured()) return;
 
     const { createClient } = window.supabase;
