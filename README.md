@@ -6,9 +6,9 @@ A personal collection of browser-based tools, hosted on GitHub Pages.
 
 | Tool | Description |
 |------|-------------|
-| [Dummy](https://nicolasfranciscozanardo-lab.github.io/tool-dump/proyects/dummy/) | Pose reference for drawing practice |
-| [Yugioh](https://nicolasfranciscozanardo-lab.github.io/tool-dump/proyects/YuGi/) | Deck builder and collection tracker |
-| [Worldbuilding](https://nicolasfranciscozanardo-lab.github.io/tool-dump/proyects/worldbuilding/) | Wiki for writing projects |
+| [Dummy](https://nicoliis.github.io/dump/proyects/dummy/) | Pose reference for drawing practice |
+| [Yugioh](https://nicoliis.github.io/dump/proyects/YuGi/) | Deck builder and collection tracker |
+| [Worldbuilding](https://nicoliis.github.io/dump/proyects/worldbuilding/) | Wiki for writing projects |
 
 ## Data
 
@@ -17,4 +17,4 @@ For storing data we used the "https://supabase.com/" service.
 
 ## Hosting
 
-Deployed in [GitHub Pages](https://nicolasfranciscozanardo-lab.github.io/tool-dump/). Push to `main` to publish.
+Deployed in [GitHub Pages](https://nicoliis.github.io/dump/). Push to `main` to publish.

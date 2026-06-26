@@ -1,15 +1,22 @@
+// Shared hybrid store: localStorage cache + Supabase cloud (when logged in).
+const store = Storage('worldbuilding');
+
 function loadData() {
-  const raw = localStorage.getItem('storyforge_data');
-  if (!raw) return;
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed.home)   State.data.home   = parsed.home;
-    if (parsed.groups) State.data.groups = parsed.groups;
-  } catch (e) { console.error('Load failed', e); }
+  const saved = store.get('data', null);   // sync read from localStorage cache
+  if (!saved) return;
+  if (saved.home)   State.data.home   = saved.home;
+  if (saved.groups) State.data.groups = saved.groups;
 }
 
 function saveData() {
-  localStorage.setItem('storyforge_data', JSON.stringify(State.data));
+  // Writes localStorage immediately + pushes to Supabase in the background.
+  store.set('data', State.data).catch(e => console.error('Cloud save failed', e));
+}
+
+// Pull cloud data into the local cache, then refresh State. Called on login.
+async function syncData() {
+  await store.sync();
+  loadData();
 }
 
 function slugify(name) {

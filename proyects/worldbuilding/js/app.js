@@ -10,6 +10,16 @@ window.addEventListener('load', () => {
   _syncModeButton();
   navigate('home');
 
+  // Once logged in, pull the latest data from Supabase and refresh the UI.
+  if (window.Auth) {
+    Auth.onChange(async ({ user }) => {
+      if (!user) return;
+      await syncData();
+      buildSidebar();
+      renderCurrentView();
+    });
+  }
+
   UI.get('btn-new-group').addEventListener('click', () => navigate('new-group'));
 
   UI.get('btn-mode').addEventListener('click', () => {
