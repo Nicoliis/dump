@@ -11,5 +11,5 @@ const State = {
   },
   currentView: 'home',
   currentItem: null,   // { groupSlug, itemIndex } or null
-  editMode: true,
+  editMode: false,
 };
