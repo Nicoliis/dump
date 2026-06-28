@@ -4,46 +4,32 @@ function _syncModeButton() {
   btn.className   = State.editMode ? 'btn-mode btn-mode--edit' : 'btn-mode btn-mode--view';
 }
 
-let _booted = false;
-
 window.addEventListener('load', () => {
-  _wireTopbar();
+  loadData();
+  buildSidebar();
   _syncModeButton();
+  navigate('home');
 
-  // The auth gate guarantees we only get here once signed in.
+  // Once logged in, pull the latest data from Supabase and refresh the UI.
   if (window.Auth) {
     Auth.onChange(async ({ user }) => {
-      if (!user) { _booted = false; return; }
-      if (_booted) return;
-      _booted = true;
-      State.profile = await Cloud.ensureProfile();
-      await Cloud.migrateLegacy();
-      goGallery();
+      if (!user) return;
+      await syncData();
+      buildSidebar();
+      renderCurrentView();
     });
-  } else {
-    goGallery();
   }
-});
 
-function _wireTopbar() {
-  UI.get('btn-gallery').addEventListener('click', () => goGallery());
-  UI.get('btn-profile').addEventListener('click', () => goProfile());
-  UI.get('btn-world-settings').addEventListener('click', () => openWorldSettings());
   UI.get('btn-new-group').addEventListener('click', () => navigate('new-group'));
-  UI.get('btn-signout').addEventListener('click', () => Auth.signOut());
 
   UI.get('btn-mode').addEventListener('click', () => {
-    if (!isOwner()) return; // only owners can edit
     State.editMode = !State.editMode;
     _syncModeButton();
-    _chrome();
-    buildSidebar();
     renderCurrentView();
   });
 
   UI.get('btn-export').addEventListener('click', () => {
-    const name = (State.currentWorld?.title || 'storyforge').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    downloadFile(exportXML(), name + '.xml', 'application/xml');
+    downloadFile(exportXML(), 'storyforge.xml', 'application/xml');
   });
 
   UI.get('btn-import').addEventListener('click', () => UI.get('import-file').click());
@@ -58,7 +44,7 @@ function _wireTopbar() {
   });
 
   UI.get('search-input').addEventListener('keyup', e => {
-    if (e.key !== 'Enter' || !State.data) return;
+    if (e.key !== 'Enter') return;
     const term = e.target.value.toLowerCase().trim();
     if (!term) return;
     for (const g of State.data.groups) {
@@ -69,4 +55,4 @@ function _wireTopbar() {
     }
     alert('Nothing found for: ' + term);
   });
-}
+});

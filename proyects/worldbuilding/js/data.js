@@ -1,18 +1,22 @@
-// Helpers shared across views. Persistence now lives in cloud.js (per-world rows).
+// Shared hybrid store: localStorage cache + Supabase cloud (when logged in).
+const store = Storage('worldbuilding');
 
-// Save the currently open world's content back to Supabase.
-// State.data is the same object reference as State.currentWorld.data, so edits
-// to groups/home are already reflected — we just push the row.
-function saveData() {
-  if (!State.currentWorld) return;
-  State.currentWorld.data = State.data;
-  Cloud.saveWorld(State.currentWorld).catch(e => console.error('Cloud save failed', e));
+function loadData() {
+  const saved = store.get('data', null);   // sync read from localStorage cache
+  if (!saved) return;
+  if (saved.home)   State.data.home   = saved.home;
+  if (saved.groups) State.data.groups = saved.groups;
 }
 
-// True when the signed-in user owns the open world (gates edit mode / writes).
-function isOwner() {
-  const uid = window.Auth?.getUser()?.id;
-  return !!(State.currentWorld && uid && State.currentWorld.owner_id === uid);
+function saveData() {
+  // Writes localStorage immediately + pushes to Supabase in the background.
+  store.set('data', State.data).catch(e => console.error('Cloud save failed', e));
+}
+
+// Pull cloud data into the local cache, then refresh State. Called on login.
+async function syncData() {
+  await store.sync();
+  loadData();
 }
 
 function slugify(name) {
@@ -24,12 +28,7 @@ function generateId() {
 }
 
 function getGroup(slug) {
-  return State.data?.groups.find(g => g.slug === slug) || null;
-}
-
-// Parse a comma-separated tag string into a clean, de-duplicated array.
-function parseTags(str) {
-  return [...new Set((str || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean))];
+  return State.data.groups.find(g => g.slug === slug) || null;
 }
 
 function refDisplay(r) { const i = r.indexOf(':'); return i >= 0 ? r.slice(0, i) : r; }
