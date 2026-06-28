@@ -5,11 +5,12 @@ const DEFAULT_GROUPS = [
 ];
 
 const State = {
-  data: {
-    home:   { content: '# Welcome to StoryForge\n\nStart building your universe here.' },
-    groups: DEFAULT_GROUPS.map(g => ({ ...g, items: [] })),
-  },
-  currentView: 'home',
-  currentItem: null,   // { groupSlug, itemIndex } or null
-  editMode: false,
+  profile: null,        // the signed-in user's profile row
+  worlds: [],           // gallery cache (metadata only)
+  currentWorld: null,   // full world row currently open: { id, owner_id, title, tags, is_public, data, author }
+  data: null,           // === currentWorld.data while inside a world (home + groups); null in the gallery
+  profileViewing: null, // user id whose profile is being shown
+  currentView: 'gallery',
+  currentItem: null,    // { groupSlug, itemIndex } or null
+  editMode: false,      // view-first; only owners can toggle on
 };
