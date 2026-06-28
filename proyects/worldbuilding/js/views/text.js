@@ -5,7 +5,7 @@ function renderTextGroup(group) {
 
   const wrap = UI.make('div').class('detail-view');
 
-  const backBtn = UI.make('button').class('btn-secondary').text('← Back').on('click', () => navigate('home'));
+  const backBtn = UI.make('button').class('btn-secondary').innerHTML(Icons.label('back', 'Back')).on('click', () => navigate('home'));
   const bar = UI.make('div').class('detail-bar').withChilds(backBtn);
 
   if (State.editMode) {

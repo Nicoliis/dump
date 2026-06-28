@@ -24,6 +24,13 @@ body.mode-world .preview-only h1,
 body.mode-world .preview-only h2,
 body.mode-world .preview-only h3 { color: #f0d7a3; }
 
+/* ── Icons ─────────────────────────────────────────────────────── */
+.ic { display: inline-flex; align-items: center; flex-shrink: 0; }
+.ic svg, .brand-mark svg, .caret svg, .icon-btn svg { display: block; }
+/* Buttons carry an icon + label, so lay them out as flex rows */
+.btn-primary, .btn-secondary, .btn-danger { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.menu-item { gap: 10px; }
+
 /* ── Topbar chrome ─────────────────────────────────────────────── */
 .topbar-left  { gap: 16px; min-width: 0; }
 .topbar-right { gap: 12px; }
@@ -36,18 +43,18 @@ body.mode-world .preview-only h3 { color: #f0d7a3; }
   flex-shrink: 0;
 }
 .brand:hover { background: rgba(255,255,255,0.06); }
-.brand-mark  { color: var(--accent); font-size: 15px; }
+.brand-mark  { color: var(--accent); display: inline-flex; align-items: center; }
 
 .breadcrumb { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Segmented View / Edit toggle */
 .seg     { display: inline-flex; background: #11131c; border: 1px solid var(--border); border-radius: 9px; padding: 2px; }
-.seg-btn { background: none; border: none; color: var(--text-muted); font-size: 13px; padding: 5px 12px; border-radius: 7px; cursor: pointer; transition: all 0.15s; }
+.seg-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-muted); font-size: 13px; padding: 5px 12px; border-radius: 7px; cursor: pointer; transition: all 0.15s; }
 .seg-btn--on { background: var(--accent); color: #fff; }
 body.mode-world .seg-btn--on { color: #2a2008; }
 
 /* Icon button (kebab) */
-.icon-btn { background: none; border: 1px solid var(--border); color: var(--text-secondary); width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font-size: 18px; line-height: 1; }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); color: var(--text-secondary); width: 34px; height: 34px; border-radius: 9px; cursor: pointer; }
 .icon-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
 
 /* Dropdowns (world actions + user menu) */
@@ -69,7 +76,8 @@ body.mode-world .seg-btn--on { color: #2a2008; }
 .user-trigger { display: inline-flex; align-items: center; gap: 8px; background: none; border: 1px solid var(--border); border-radius: 9999px; padding: 4px 10px 4px 4px; cursor: pointer; color: var(--text); }
 .user-trigger:hover { background: rgba(255,255,255,0.06); }
 .user-name { font-size: 13px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.caret { color: var(--text-muted); font-size: 10px; }
+.caret { display: inline-flex; align-items: center; color: var(--text-muted); }
+.caret svg { width: 14px; height: 14px; }
 
 /* ── Gallery ───────────────────────────────────────────────────── */
 .gallery        { max-width: 1100px; margin: 0 auto; }

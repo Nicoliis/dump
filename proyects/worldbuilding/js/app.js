@@ -72,6 +72,7 @@ function _wireDropdown(wrapId, btnId) {
 }
 
 function _wireTopbar() {
+  Icons.apply();  // fill static [data-icon] placeholders in the topbar
   UI.get('brand').addEventListener('click', () => goGallery());
 
   _wireDropdown('world-menu-wrap', 'world-menu-btn');

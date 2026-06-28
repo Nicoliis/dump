@@ -8,9 +8,9 @@ function buildSidebar() {
     logo.textContent = 'StoryForge';
     const sec = UI.make('div').class('menu-section');
     sec.withChilds(UI.make('h3').text('Browse'));
-    sec.withChilds(_sideItem('🌐  Gallery',    'gallery', () => goGallery()));
-    sec.withChilds(_sideItem('👤  My Profile', 'profile', () => goProfile()));
-    sec.withChilds(_sideItem('✨  New World',   'new-world', () => goNewWorld()));
+    sec.withChilds(_sideItem('gallery', 'Gallery',    'gallery',   () => goGallery()));
+    sec.withChilds(_sideItem('user',    'My Profile', 'profile',   () => goProfile()));
+    sec.withChilds(_sideItem('plus',    'New World',  'new-world', () => goNewWorld()));
     menu.appendChild(sec.getElement());
     return;
   }
@@ -19,7 +19,7 @@ function buildSidebar() {
   logo.textContent = State.currentWorld.title || 'World';
 
   const top = UI.make('div').class('menu-section');
-  top.withChilds(_sideItem('←  Back to Gallery', null, () => goGallery()));
+  top.withChilds(_sideItem('back', 'Back to Gallery', null, () => goGallery()));
   menu.appendChild(top.getElement());
 
   const coreSection = UI.make('div').class('menu-section');
@@ -49,9 +49,9 @@ function makeMenuItem(label, slug) {
 }
 
 // Sidebar nav entry for top-level destinations (gallery/profile/new world/back).
-function _sideItem(label, activeView, onClick) {
+function _sideItem(icon, label, activeView, onClick) {
   return UI.make('div')
     .class('menu-item', activeView && State.currentView === activeView ? 'active' : '')
-    .text(label)
+    .innerHTML(Icons.label(icon, label))
     .on('click', onClick);
 }

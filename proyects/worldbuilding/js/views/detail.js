@@ -15,7 +15,7 @@ function renderDetailView() {
   const wrap = UI.make('div').class('detail-view');
 
   // ── action bar ─────────────────────────────────────────────────
-  const backBtn = UI.make('button').class('btn-secondary').text('← Back').on('click', () => navigate(groupSlug));
+  const backBtn = UI.make('button').class('btn-secondary').innerHTML(Icons.label('back', 'Back')).on('click', () => navigate(groupSlug));
   const bar = UI.make('div').class('detail-bar').withChilds(backBtn);
   if (State.editMode) {
     const actions = UI.make('div').class('detail-actions');

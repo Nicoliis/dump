@@ -39,7 +39,7 @@ function renderNewGroupView() {
 
   const wrap = UI.make('div').class('detail-view').withChilds(
     UI.make('div').class('detail-bar').withChilds(
-      UI.make('button').class('btn-secondary').text('← Back').on('click', () => navigate('home')),
+      UI.make('button').class('btn-secondary').innerHTML(Icons.label('back', 'Back')).on('click', () => navigate('home')),
       UI.make('button').class('btn-primary').text('Create').on('click', create)
     ),
     nameInput,

@@ -21,7 +21,7 @@ function _drawGallery() {
   wrap.withChilds(
     UI.make('div').class('gallery-head').withChilds(
       UI.make('h1').text('Worlds'),
-      UI.make('button').class('btn-primary').text('✨ New World').on('click', () => goNewWorld())
+      UI.make('button').class('btn-primary').innerHTML(Icons.label('plus', 'New World')).on('click', () => goNewWorld())
     )
   );
 

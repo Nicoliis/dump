@@ -27,22 +27,22 @@
   <div class="main">
     <header class="topbar">
       <div class="topbar-left">
-        <button class="brand" id="brand"><span class="brand-mark">✦</span> StoryForge</button>
+        <button class="brand" id="brand"><span class="brand-mark" data-icon="book"></span> StoryForge</button>
         <span class="breadcrumb" id="breadcrumb"></span>
         <input class="search" id="search-input" type="text" placeholder="Search this world…">
       </div>
       <div class="topbar-right">
         <div class="seg" id="mode-toggle">
-          <button class="seg-btn" id="mode-view">👁 View</button>
-          <button class="seg-btn" id="mode-edit">✎ Edit</button>
+          <button class="seg-btn" id="mode-view"><span class="ic" data-icon="view"></span>View</button>
+          <button class="seg-btn" id="mode-edit"><span class="ic" data-icon="edit"></span>Edit</button>
         </div>
 
         <div class="dropdown" id="world-menu-wrap">
-          <button class="icon-btn" id="world-menu-btn" aria-label="World actions">⋯</button>
+          <button class="icon-btn" id="world-menu-btn" data-icon="more" aria-label="World actions"></button>
           <div class="dropdown-panel">
-            <button id="btn-world-settings">⚙️  World settings</button>
-            <button id="btn-export">⬇️  Export XML</button>
-            <button id="btn-import">⬆️  Import XML</button>
+            <button id="btn-world-settings"><span class="ic" data-icon="settings"></span>World settings</button>
+            <button id="btn-export"><span class="ic" data-icon="download"></span>Export XML</button>
+            <button id="btn-import"><span class="ic" data-icon="upload"></span>Import XML</button>
           </div>
         </div>
 
@@ -50,11 +50,11 @@
           <button class="user-trigger" id="user-trigger">
             <span class="avatar avatar--initial" id="user-avatar"></span>
             <span class="user-name" id="user-name"></span>
-            <span class="caret">▾</span>
+            <span class="caret" data-icon="chevron"></span>
           </button>
           <div class="dropdown-panel">
-            <button id="btn-profile">👤  My profile</button>
-            <button id="btn-signout">⏻  Sign out</button>
+            <button id="btn-profile"><span class="ic" data-icon="user"></span>My profile</button>
+            <button id="btn-signout"><span class="ic" data-icon="logout"></span>Sign out</button>
           </div>
         </div>
 
@@ -66,6 +66,7 @@
 
   <script src="lib/marked.min.js"></script>
   <script src="lib/UI.js"></script>
+  <script src="js/icons.js"></script>
   <script src="js/state.js"></script>
   <script src="js/cloud.js"></script>
   <script src="js/data.js"></script>

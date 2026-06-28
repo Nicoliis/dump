@@ -65,7 +65,7 @@ function _editableHeader(profile) {
         bio:          bio.getElement().value.trim() || null,
       });
       State.profile = updated;
-      msg.text('Saved ✓').getElement().className = 'profile-msg profile-msg--ok';
+      msg.text('Saved').getElement().className = 'profile-msg profile-msg--ok';
     } catch (e) {
       msg.text(e.message.includes('duplicate') ? 'That username is taken.' : 'Save failed.')
          .getElement().className = 'profile-msg profile-msg--err';
@@ -108,7 +108,7 @@ function _favoriteTags(profile, isMe) {
     try {
       const updated = await Cloud.saveProfile({ favorite_tags: parseTags(input.getElement().value) });
       State.profile = updated;
-      msg.text('Saved ✓').getElement().className = 'profile-msg profile-msg--ok';
+      msg.text('Saved').getElement().className = 'profile-msg profile-msg--ok';
     } catch { msg.text('Save failed.').getElement().className = 'profile-msg profile-msg--err'; }
   });
   return sec.withChilds(

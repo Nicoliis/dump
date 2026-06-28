@@ -42,7 +42,7 @@ function renderWorldForm(mode) {
   }
 
   const bar = UI.make('div').class('detail-bar').withChilds(
-    UI.make('button').class('btn-secondary').text('← Back')
+    UI.make('button').class('btn-secondary').innerHTML(Icons.label('back', 'Back'))
       .on('click', () => editing ? navigate('home') : goGallery()),
     UI.make('button').class('btn-primary').text(editing ? 'Save' : 'Create world').on('click', submit)
   );
@@ -59,7 +59,7 @@ function renderWorldForm(mode) {
   if (editing) {
     wrap.withChilds(
       UI.make('div').style({ marginTop: '32px', borderTop: '1px solid var(--border)', paddingTop: '16px' }).withChilds(
-        UI.make('button').class('btn-danger').text('Delete world').on('click', async () => {
+        UI.make('button').class('btn-danger').innerHTML(Icons.label('trash', 'Delete world')).on('click', async () => {
           if (!confirm(`Delete "${State.currentWorld.title}"? This cannot be undone.`)) return;
           await Cloud.deleteWorld(State.currentWorld.id);
           goGallery();
