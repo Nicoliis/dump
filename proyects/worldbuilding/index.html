@@ -17,7 +17,7 @@
 	<script src="../../shared/auth-gate.js"></script>
 	<script>AuthGate.protect();</script>
 </head>
-<body>
+<body class="mode-social">
   <aside class="sidebar">
     <div class="logo">StoryForge</div>
     <nav class="menu" id="menu"></nav>
@@ -27,18 +27,38 @@
   <div class="main">
     <header class="topbar">
       <div class="topbar-left">
-        <input class="search" id="search-input" type="text" placeholder="Search...">
+        <button class="brand" id="brand"><span class="brand-mark">✦</span> StoryForge</button>
+        <span class="breadcrumb" id="breadcrumb"></span>
+        <input class="search" id="search-input" type="text" placeholder="Search this world…">
       </div>
       <div class="topbar-right">
-        <span id="current-path">Gallery</span>
-        <button class="btn-secondary" id="btn-gallery">Gallery</button>
-        <button class="btn-secondary" id="btn-profile">Profile</button>
-        <button class="btn-secondary" id="btn-world-settings">World Settings</button>
-        <button class="btn-mode" id="btn-mode">Edit Mode</button>
-        <button class="btn-secondary" id="btn-export">Export XML</button>
-        <button class="btn-secondary" id="btn-import">Import XML</button>
+        <div class="seg" id="mode-toggle">
+          <button class="seg-btn" id="mode-view">👁 View</button>
+          <button class="seg-btn" id="mode-edit">✎ Edit</button>
+        </div>
+
+        <div class="dropdown" id="world-menu-wrap">
+          <button class="icon-btn" id="world-menu-btn" aria-label="World actions">⋯</button>
+          <div class="dropdown-panel">
+            <button id="btn-world-settings">⚙️  World settings</button>
+            <button id="btn-export">⬇️  Export XML</button>
+            <button id="btn-import">⬆️  Import XML</button>
+          </div>
+        </div>
+
+        <div class="dropdown" id="user-menu-wrap">
+          <button class="user-trigger" id="user-trigger">
+            <span class="avatar avatar--initial" id="user-avatar"></span>
+            <span class="user-name" id="user-name"></span>
+            <span class="caret">▾</span>
+          </button>
+          <div class="dropdown-panel">
+            <button id="btn-profile">👤  My profile</button>
+            <button id="btn-signout">⏻  Sign out</button>
+          </div>
+        </div>
+
         <input type="file" id="import-file" accept=".xml" style="display:none">
-        <button class="btn-secondary" id="btn-signout">Sign out</button>
       </div>
     </header>
     <main class="content" id="main-content"></main>

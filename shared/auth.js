@@ -38,20 +38,34 @@ const Auth = (() => {
     return _initPromise;
   }
 
+  // Remove OAuth tokens / PKCE code from the address bar (and browser history)
+  // after a redirect login, so credentials never linger in the URL.
+  function _stripAuthParams() {
+    const { hash, search, pathname } = window.location;
+    const dirty = /(access_token|refresh_token|provider_token|expires_at|token_type)=/.test(hash)
+               || /[?&](code|state)=/.test(search);
+    if (dirty) window.history.replaceState(null, document.title, pathname);
+  }
+
   async function _doInit() {
     if (!_configured()) return;
 
     const { createClient } = window.supabase;
     _client = createClient(
       window.NICOTOLS_CONFIG.supabaseUrl,
-      window.NICOTOLS_CONFIG.supabaseKey
+      window.NICOTOLS_CONFIG.supabaseKey,
+      // PKCE keeps tokens out of the URL fragment (a short-lived ?code= is used
+      // and exchanged in the background), and we still scrub the URL afterwards.
+      { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } }
     );
 
     const { data: { session } } = await _client.auth.getSession();
     _user = session?.user ?? null;
+    _stripAuthParams();
 
-    _client.auth.onAuthStateChange((_event, session) => {
+    _client.auth.onAuthStateChange((event, session) => {
       _user = session?.user ?? null;
+      if (event === 'SIGNED_IN') _stripAuthParams();
       _notify();
     });
   }

@@ -99,7 +99,7 @@ function _authorRow(author, ownerId) {
   if (author?.avatar_url) {
     row.withChilds(UI.make('img').class('avatar').attrs({ src: author.avatar_url, alt: name }));
   } else {
-    row.withChilds(UI.make('span').class('avatar avatar--initial').text(name[0].toUpperCase()));
+    row.withChilds(UI.make('span').class('avatar', 'avatar--initial').text(name[0].toUpperCase()));
   }
   row.withChilds(UI.make('span').class('author-name').text(name));
   return row;

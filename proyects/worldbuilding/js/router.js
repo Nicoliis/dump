@@ -90,35 +90,46 @@ function _chrome() {
   const owner   = isOwner();
   const show = (id, on) => { const el = UI.get(id); if (el) el.style.display = on ? '' : 'none'; };
 
-  show('btn-gallery', true);
-  show('btn-profile', true);
-  show('btn-signout', true);
-  show('btn-world-settings', inWorld && owner);
-  show('btn-mode', inWorld && owner);
-  show('btn-export', inWorld);
-  show('btn-import', inWorld && owner);
-  show('search-input', inWorld);
-  show('btn-new-group', inWorld && owner && State.editMode);
+  // Two distinct shells: a "social" space (gallery/profile) and an immersive
+  // "world" space (reading/editing). CSS keys off these body classes.
+  document.body.classList.toggle('mode-world', inWorld);
+  document.body.classList.toggle('mode-social', !inWorld);
 
+  show('breadcrumb',      inWorld);
+  show('search-input',    inWorld);
+  show('mode-toggle',     inWorld && owner);
+  show('world-menu-wrap', inWorld);
+  show('btn-world-settings', owner);  // items inside the world-actions menu
+  show('btn-import',         owner);  // export stays available to viewers
+  show('btn-new-group',   inWorld && owner && State.editMode);
+
+  _syncModeToggle();
+  _renderUserMenu();
+  _setBreadcrumb();
+}
+
+function _setBreadcrumb() {
+  const el = UI.get('breadcrumb');
+  if (!el) return;
   let path;
-  if (State.currentView === 'gallery')        path = 'Gallery';
-  else if (State.currentView === 'profile')   path = 'Profile';
-  else if (State.currentView === 'new-world') path = 'New World';
-  else {
-    path = State.currentWorld?.title || 'World';
+  if (!State.currentWorld) {
+    path = State.currentView === 'profile'   ? 'Profile'
+         : State.currentView === 'new-world' ? 'New World' : 'Gallery';
+  } else {
+    path = State.currentWorld.title || 'World';
     const group = getGroup(State.currentView);
     const sub = State.currentView === 'home'           ? 'Home'
               : State.currentView === 'new-group'      ? 'New Group'
               : State.currentView === 'world-settings' ? 'Settings'
               : (group?.name || State.currentView);
-    path += ' › ' + sub;
+    path += '  ›  ' + sub;
     if (State.currentItem) {
       const { groupSlug, itemIndex } = State.currentItem;
       const item = itemIndex !== null ? getGroup(groupSlug)?.items[itemIndex] : null;
-      path += ' › ' + (item?.name || 'New Item');
+      path += '  ›  ' + (item?.name || 'New Item');
     }
   }
-  UI.get('current-path').textContent = path;
+  el.textContent = path;
 }
 
 /* ── Render the active within-world view ──────────────────────── */
