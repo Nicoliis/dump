@@ -50,9 +50,15 @@ window.addEventListener('load', () => {
       if (!user) { _booted = false; return; }
       if (_booted) return;
       _booted = true;
-      State.profile = await Cloud.ensureProfile();
-      await Cloud.migrateLegacy();
+      // Never let a cloud hiccup (e.g. tables not created yet) blank the screen —
+      // always land on the gallery, which surfaces its own empty/error state.
+      try { State.profile = await Cloud.ensureProfile(); } catch (e) { console.error(e); }
+      try { await Cloud.migrateLegacy(); } catch (e) { console.error('migrate skipped', e); }
+      try { State.following = await Cloud.loadFollowing(); } catch (e) { console.error(e); }
+      try { State.likes = await Cloud.loadLikes(); } catch (e) { console.error(e); }
+      if (!State.following.worlds.size && !State.following.users.size) State.homeTab = 'discover';
       goGallery();
+      _refreshNotifBadge();
     });
   } else {
     goGallery();

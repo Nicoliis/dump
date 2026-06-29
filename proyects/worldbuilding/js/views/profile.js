@@ -7,10 +7,11 @@ async function renderProfile(userId) {
   const uid = window.Auth?.getUser()?.id;
   const isMe = userId === uid;
 
-  const [profile, worlds, published] = await Promise.all([
+  const [profile, worlds, published, counts] = await Promise.all([
     Cloud.getProfile(userId),
     Cloud.listByOwner(userId),
     Cloud.publishedTags(userId),
+    Cloud.userFollowCounts(userId),
   ]);
 
   content.innerHTML = '';
@@ -22,7 +23,7 @@ async function renderProfile(userId) {
   if (isMe) State.profile = profile;
 
   const wrap = UI.make('div').class('profile-view');
-  wrap.withChilds(isMe ? _editableHeader(profile) : _readonlyHeader(profile));
+  wrap.withChilds(isMe ? _editableHeader(profile, counts) : _readonlyHeader(profile, counts));
   wrap.withChilds(_favoriteTags(profile, isMe));
   wrap.withChilds(_publishedCloud(published));
   wrap.withChilds(_worldList(worlds, isMe));
@@ -39,16 +40,26 @@ function _avatar(profile, size) {
     .style({ width: size, height: size });
 }
 
-function _readonlyHeader(profile) {
-  const meta = UI.make('div').withChilds(
+function _followCounts(counts) {
+  return UI.make('div').class('profile-stats').withChilds(
+    UI.make('span').withChilds(UI.make('strong').text(String(counts.followers)), UI.make('span').class('muted').text(' followers')),
+    UI.make('span').withChilds(UI.make('strong').text(String(counts.following)), UI.make('span').class('muted').text(' following'))
+  );
+}
+
+function _readonlyHeader(profile, counts) {
+  const meta = UI.make('div').style({ flex: '1' }).withChilds(
     UI.make('h1').text(profile.display_name || profile.username || 'Anonymous'),
     UI.make('p').class('profile-username').text('@' + (profile.username || 'user'))
   );
   if (profile.bio) meta.withChilds(UI.make('p').class('profile-bio').text(profile.bio));
+  meta.withChilds(_followCounts(counts));
+  const fb = followUserButton(profile.id);
+  if (fb) meta.withChilds(UI.make('div').style({ marginTop: '12px' }).withChilds(fb));
   return UI.make('div').class('profile-header').withChilds(_avatar(profile, '72px'), meta);
 }
 
-function _editableHeader(profile) {
+function _editableHeader(profile, counts) {
   const username = UI.make('input').class('field-input').value(profile.username || '').attrs({ placeholder: 'username' });
   const display  = UI.make('input').class('field-input').value(profile.display_name || '').attrs({ placeholder: 'Display name' });
   const avatar   = UI.make('input').class('field-input').value(profile.avatar_url || '').attrs({ placeholder: 'Avatar image URL' });
@@ -80,7 +91,8 @@ function _editableHeader(profile) {
       _field('Display name', display),
       _field('Avatar URL', avatar),
       _field('Bio', bio),
-      UI.make('div').style({ display: 'flex', alignItems: 'center', gap: '12px' }).withChilds(save, msg)
+      UI.make('div').style({ display: 'flex', alignItems: 'center', gap: '12px' }).withChilds(save, msg),
+      _followCounts(counts)
     )
   );
 }

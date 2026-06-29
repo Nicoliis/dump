@@ -60,7 +60,7 @@ const Cloud = (() => {
 
   /* ── Worlds ───────────────────────────────────────────────── */
 
-  const CARD_COLS = 'id,owner_id,title,description,tags,is_public,updated_at,author:profiles(username,display_name,avatar_url)';
+  const CARD_COLS = 'id,owner_id,title,description,tags,language,is_public,updated_at,author:profiles(username,display_name,avatar_url)';
 
   // Gallery: every public world plus the viewer's own (RLS enforces the same).
   async function listGallery() {
@@ -91,10 +91,12 @@ const Cloud = (() => {
     return data;
   }
 
-  async function createWorld({ title, description = '', tags = [], is_public = false, data }) {
+  async function createWorld({ title, description = '', tags = [], language = 'en', is_public = false, data }) {
     const db = _db(); const uid = _uid();
     if (!db || !uid) throw new Error('Not signed in');
-    const row = { owner_id: uid, title, description, tags, is_public, data: data || blankWorldData() };
+    // Guarantee the profile row exists first — worlds.owner_id has an FK to it.
+    await ensureProfile();
+    const row = { owner_id: uid, title, description, tags, language, is_public, data: data || blankWorldData() };
     const { data: created, error } = await db.from('worlds').insert(row).select('*').maybeSingle();
     if (error) throw error;
     return created;
@@ -108,6 +110,7 @@ const Cloud = (() => {
       title: world.title,
       description: world.description,
       tags: world.tags,
+      language: world.language,
       is_public: world.is_public,
       data: world.data,
       updated_at: new Date().toISOString(),
@@ -132,6 +135,179 @@ const Cloud = (() => {
     return Object.entries(counts)
       .map(([tag, count]) => ({ tag, count }))
       .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+  }
+
+  /* ── Follows ──────────────────────────────────────────────── */
+
+  // The viewer's full follow state, loaded once at bootstrap into State.following.
+  async function loadFollowing() {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid) return { worlds: new Set(), users: new Set() };
+    const [{ data: wf }, { data: uf }] = await Promise.all([
+      db.from('world_follows').select('world_id').eq('follower_id', uid),
+      db.from('user_follows').select('followee_id').eq('follower_id', uid),
+    ]);
+    return {
+      worlds: new Set((wf || []).map(r => r.world_id)),
+      users:  new Set((uf || []).map(r => r.followee_id)),
+    };
+  }
+
+  async function followWorld(worldId, on) {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid) return;
+    if (on) await db.from('world_follows').upsert({ follower_id: uid, world_id: worldId }, { onConflict: 'follower_id,world_id' });
+    else    await db.from('world_follows').delete().eq('follower_id', uid).eq('world_id', worldId);
+  }
+
+  async function followUser(userId, on) {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid || userId === uid) return;
+    if (on) await db.from('user_follows').upsert({ follower_id: uid, followee_id: userId }, { onConflict: 'follower_id,followee_id' });
+    else    await db.from('user_follows').delete().eq('follower_id', uid).eq('followee_id', userId);
+  }
+
+  async function userFollowCounts(profileId) {
+    const db = _db(); if (!db) return { followers: 0, following: 0 };
+    const [a, b] = await Promise.all([
+      db.from('user_follows').select('*', { count: 'exact', head: true }).eq('followee_id', profileId),
+      db.from('user_follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileId),
+    ]);
+    return { followers: a.count || 0, following: b.count || 0 };
+  }
+
+  async function worldFollowerCount(worldId) {
+    const db = _db(); if (!db) return 0;
+    const { count } = await db.from('world_follows').select('*', { count: 'exact', head: true }).eq('world_id', worldId);
+    return count || 0;
+  }
+
+  /* ── Feed: updates from followed worlds + followed people ──── */
+
+  async function feed() {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid) return [];
+    const f = State.following || await loadFollowing();
+    const worldIds = [...f.worlds];
+    const followeeIds = [...f.users];
+    if (!worldIds.length && !followeeIds.length) return [];
+
+    const clauses = [];
+    if (worldIds.length)    clauses.push(`id.in.(${worldIds.join(',')})`);
+    if (followeeIds.length) clauses.push(`and(is_public.eq.true,owner_id.in.(${followeeIds.join(',')}))`);
+
+    const { data, error } = await db.from('worlds').select(CARD_COLS)
+      .or(clauses.join(',')).order('updated_at', { ascending: false });
+    if (error) { console.error('feed', error); return []; }
+
+    const ws = new Set(worldIds), us = new Set(followeeIds);
+    return (data || []).map(w => ({ ...w, _viaWorld: ws.has(w.id), _viaAuthor: us.has(w.owner_id) }));
+  }
+
+  /* ── Discovery rail ───────────────────────────────────────── */
+
+  // Authors with public worlds you don't already follow, ranked by world count.
+  async function suggestedAuthors(limit = 6) {
+    const db = _db(); const uid = _uid();
+    if (!db) return [];
+    const { data } = await db.from('worlds')
+      .select('owner_id, author:profiles(username,display_name,avatar_url)').eq('is_public', true);
+    const following = State.following?.users || new Set();
+    const by = {};
+    (data || []).forEach(w => {
+      if (!w.owner_id || w.owner_id === uid || following.has(w.owner_id)) return;
+      (by[w.owner_id] ||= { id: w.owner_id, author: w.author, count: 0 }).count++;
+    });
+    return Object.values(by).sort((a, b) => b.count - a.count).slice(0, limit);
+  }
+
+  async function popularTags(limit = 12) {
+    const db = _db(); if (!db) return [];
+    const { data } = await db.from('worlds').select('tags').eq('is_public', true);
+    const c = {};
+    (data || []).forEach(w => (w.tags || []).forEach(t => { c[t] = (c[t] || 0) + 1; }));
+    return Object.entries(c).map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count).slice(0, limit);
+  }
+
+  /* ── Likes ────────────────────────────────────────────────── */
+
+  async function loadLikes() {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid) return new Set();
+    const { data } = await db.from('world_likes').select('world_id').eq('user_id', uid);
+    return new Set((data || []).map(r => r.world_id));
+  }
+
+  async function likeWorld(worldId, on) {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid) return;
+    if (on) await db.from('world_likes').upsert({ user_id: uid, world_id: worldId }, { onConflict: 'user_id,world_id' });
+    else    await db.from('world_likes').delete().eq('user_id', uid).eq('world_id', worldId);
+  }
+
+  async function worldLikeCount(worldId) {
+    const db = _db(); if (!db) return 0;
+    const { count } = await db.from('world_likes').select('*', { count: 'exact', head: true }).eq('world_id', worldId);
+    return count || 0;
+  }
+
+  // Like counts for many worlds at once → { worldId: count }.
+  async function likeCounts(worldIds) {
+    const db = _db(); const out = {};
+    if (!db || !worldIds.length) return out;
+    const { data } = await db.from('world_likes').select('world_id').in('world_id', worldIds);
+    (data || []).forEach(r => { out[r.world_id] = (out[r.world_id] || 0) + 1; });
+    return out;
+  }
+
+  /* ── Notifications ────────────────────────────────────────── */
+
+  async function notifications(limit = 30) {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid) return [];
+    const { data, error } = await db.from('notifications')
+      .select('*, actor:profiles!notifications_actor_id_fkey(username,display_name,avatar_url), world:worlds(title)')
+      .eq('user_id', uid).order('created_at', { ascending: false }).limit(limit);
+    if (error) { console.error('notifications', error); return []; }
+    return data || [];
+  }
+
+  async function unreadCount() {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid) return 0;
+    const { count } = await db.from('notifications')
+      .select('*', { count: 'exact', head: true }).eq('user_id', uid).eq('read', false);
+    return count || 0;
+  }
+
+  async function markNotifRead(id) {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid) return;
+    await db.from('notifications').update({ read: true }).eq('id', id).eq('user_id', uid);
+  }
+
+  async function dismissNotif(id) {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid) return;
+    await db.from('notifications').delete().eq('id', id).eq('user_id', uid);
+  }
+
+  // Suggest a tag on someone else's world (notifies the owner via RPC).
+  async function proposeTag(worldId, tag) {
+    const db = _db(); if (!db) return;
+    const { error } = await db.rpc('propose_tag', { p_world_id: worldId, p_tag: tag });
+    if (error) throw error;
+  }
+
+  // Owner accepts a suggested tag: append it to the world's tags (deduped).
+  async function addTagToWorld(worldId, tag) {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid) return;
+    const { data: w } = await db.from('worlds').select('tags').eq('id', worldId).maybeSingle();
+    if (!w) return;
+    const next = [...new Set([...(w.tags || []), String(tag).trim().toLowerCase()])];
+    await db.from('worlds').update({ tags: next, updated_at: new Date().toISOString() }).eq('id', worldId);
   }
 
   /* ── One-time migration of the legacy single world ────────── */
@@ -162,6 +338,10 @@ const Cloud = (() => {
     ensureProfile, getProfile, saveProfile,
     listGallery, listByOwner, getWorld, createWorld, saveWorld, deleteWorld,
     publishedTags, migrateLegacy,
+    loadFollowing, followWorld, followUser, userFollowCounts, worldFollowerCount,
+    feed, suggestedAuthors, popularTags,
+    loadLikes, likeWorld, worldLikeCount, likeCounts,
+    notifications, unreadCount, markNotifRead, dismissNotif, proposeTag, addTagToWorld,
   };
 })();
 

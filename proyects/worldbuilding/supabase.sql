@@ -50,6 +50,117 @@ drop policy if exists "users write own worlds" on worlds;
 create policy "users write own worlds" on worlds
   for all using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
 
+-- ── Follows: a user can follow a world and/or a person ─────────────────────
+create table if not exists world_follows (
+  follower_id uuid not null references profiles(id) on delete cascade,
+  world_id    uuid not null references worlds(id)   on delete cascade,
+  created_at  timestamptz default now(),
+  primary key (follower_id, world_id)
+);
+create index if not exists world_follows_world_idx on world_follows (world_id);
+alter table world_follows enable row level security;
+
+drop policy if exists "world_follows readable by all" on world_follows;
+create policy "world_follows readable by all" on world_follows
+  for select using (true);
+
+drop policy if exists "users manage own world_follows" on world_follows;
+create policy "users manage own world_follows" on world_follows
+  for all using (auth.uid() = follower_id) with check (auth.uid() = follower_id);
+
+create table if not exists user_follows (
+  follower_id uuid not null references profiles(id) on delete cascade,
+  followee_id uuid not null references profiles(id) on delete cascade,
+  created_at  timestamptz default now(),
+  primary key (follower_id, followee_id),
+  check (follower_id <> followee_id)
+);
+create index if not exists user_follows_followee_idx on user_follows (followee_id);
+alter table user_follows enable row level security;
+
+drop policy if exists "user_follows readable by all" on user_follows;
+create policy "user_follows readable by all" on user_follows
+  for select using (true);
+
+drop policy if exists "users manage own user_follows" on user_follows;
+create policy "users manage own user_follows" on user_follows
+  for all using (auth.uid() = follower_id) with check (auth.uid() = follower_id);
+
+-- ── Language (required category) + muted tags ──────────────────────────────
+alter table worlds   add column if not exists language   text not null default 'en';
+alter table profiles add column if not exists muted_tags text[] default '{}';
+
+-- ── Likes ──────────────────────────────────────────────────────────────────
+create table if not exists world_likes (
+  user_id    uuid not null references profiles(id) on delete cascade,
+  world_id   uuid not null references worlds(id)   on delete cascade,
+  created_at timestamptz default now(),
+  primary key (user_id, world_id)
+);
+create index if not exists world_likes_world_idx on world_likes (world_id);
+alter table world_likes enable row level security;
+
+drop policy if exists "world_likes readable by all" on world_likes;
+create policy "world_likes readable by all" on world_likes for select using (true);
+
+drop policy if exists "users manage own likes" on world_likes;
+create policy "users manage own likes" on world_likes
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ── Notifications ───────────────────────────────────────────────────────────
+-- Inserted only via SECURITY DEFINER functions (e.g. propose_tag); recipients
+-- read/update their own rows.
+create table if not exists notifications (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references profiles(id) on delete cascade,  -- recipient
+  type       text not null,
+  actor_id   uuid references profiles(id) on delete set null,          -- who triggered it
+  world_id   uuid references worlds(id)   on delete cascade,
+  data       jsonb default '{}'::jsonb,
+  read       boolean default false,
+  created_at timestamptz default now()
+);
+create index if not exists notifications_user_idx on notifications (user_id, read);
+alter table notifications enable row level security;
+
+drop policy if exists "users read own notifications" on notifications;
+create policy "users read own notifications" on notifications
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "users update own notifications" on notifications;
+create policy "users update own notifications" on notifications
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "users delete own notifications" on notifications;
+create policy "users delete own notifications" on notifications
+  for delete using (auth.uid() = user_id);
+
+-- Propose a tag on someone else's world → notifies the owner. Runs as definer
+-- so it can write a notification to another user (RLS would otherwise block it).
+create or replace function public.propose_tag(p_world_id uuid, p_tag text)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_owner uuid;
+  v_actor uuid := auth.uid();
+  v_tag   text := lower(trim(p_tag));
+begin
+  if v_actor is null then raise exception 'not authenticated'; end if;
+  if v_tag = ''      then raise exception 'empty tag'; end if;
+  select owner_id into v_owner from worlds where id = p_world_id;
+  if v_owner is null then raise exception 'world not found'; end if;
+  if v_owner = v_actor then return; end if;             -- no self-suggestions
+  -- skip if this tag is already on the world
+  if exists (select 1 from worlds where id = p_world_id and v_tag = any(tags)) then return; end if;
+  -- skip duplicate pending suggestion
+  if exists (
+    select 1 from notifications
+    where user_id = v_owner and type = 'tag_suggestion' and world_id = p_world_id
+      and read = false and data->>'tag' = v_tag
+  ) then return; end if;
+  insert into notifications (user_id, type, actor_id, world_id, data)
+  values (v_owner, 'tag_suggestion', v_actor, p_world_id, jsonb_build_object('tag', v_tag));
+end; $$;
+
 -- ── Optional: auto-create a profile row on signup ──────────────────────────
 -- The app also creates the profile on first load (Cloud.ensureProfile), so this
 -- trigger is a convenience, not a requirement.

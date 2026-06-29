@@ -46,6 +46,12 @@
           </div>
         </div>
 
+        <div class="dropdown" id="notif-wrap">
+          <button class="icon-btn" id="notif-btn" data-icon="bell" aria-label="Notifications"></button>
+          <span class="notif-count" id="notif-count" style="display:none"></span>
+          <div class="dropdown-panel notif-panel" id="notif-panel"></div>
+        </div>
+
         <div class="dropdown" id="user-menu-wrap">
           <button class="user-trigger" id="user-trigger">
             <span class="avatar avatar--initial" id="user-avatar"></span>
@@ -76,8 +82,10 @@
   <script src="js/components/item-card.js"></script>
   <script src="js/components/ref-editor.js"></script>
   <script src="js/components/parent-editor.js"></script>
+  <script src="js/components/follow.js"></script>
   <script src="js/sidebar.js"></script>
   <script src="js/views/gallery.js"></script>
+  <script src="js/views/notifications.js"></script>
   <script src="js/views/profile.js"></script>
   <script src="js/views/world-settings.js"></script>
   <script src="js/views/home.js"></script>
