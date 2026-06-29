@@ -52,7 +52,7 @@ function _seenAt(worldId, key) {
 function isElementUnseen(worldId, key, updatedAt) {
   if (!updatedAt) return false;
   const s = _seenAt(worldId, key);
-  return !s || new Date(s) < new Date(updatedAt);
+  return !s || s < updatedAt;
 }
 
 // Does a world have ANY unseen updated element? `updates` = element_updates map.
