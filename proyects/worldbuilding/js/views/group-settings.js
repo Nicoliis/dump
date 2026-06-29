@@ -49,6 +49,11 @@ function renderGroupSettings(group) {
     menus.forEach(m => sel.appendChild(new Option(m.name, m.slug)));
     sel.value = group.parentId || '';
   });
+  const parentField = UI.make('div').class('field-group')
+    .withChilds(UI.make('label').text('Inside menu'), parentSel);
+  if (!menus.length)
+    parentField.withChilds(UI.make('p').class('item-meta')
+      .text('No menu folders yet — create a “Menu — folder” group (New group, or the button in Edit index) to nest groups.'));
 
   function save() {
     const n = name.getElement().value.trim();
@@ -75,7 +80,7 @@ function renderGroupSettings(group) {
     name,
     UI.make('div').class('field-group').style({ marginTop: '16px' })
       .withChilds(UI.make('label').text('Visibility'), visRow),
-    UI.make('div').class('field-group').withChilds(UI.make('label').text('Inside menu'), parentSel)
+    parentField
   );
 
   if (!isMenu)
@@ -127,13 +132,18 @@ function renderIndexEditor() {
   const content = UI.get('main-content');
   content.innerHTML = '';
 
+  const menuCount = (State.data.groups || []).filter(g => g.type === 'menu').length;
+
   const wrap = UI.make('div').class('detail-view');
   wrap.withChilds(
     UI.make('div').class('detail-bar').withChilds(
-      UI.make('button').class('btn-secondary').innerHTML(Icons.label('back', 'Back')).on('click', () => navigate('home'))
+      UI.make('button').class('btn-secondary').innerHTML(Icons.label('back', 'Back')).on('click', () => navigate('home')),
+      UI.make('button').class('btn-primary').innerHTML(Icons.label('plus', 'New menu folder')).on('click', _addMenuFolder)
     ),
     UI.make('h1').class('detail-title').text('Edit index'),
-    UI.make('p').class('item-meta').text('Reorder, nest under menus, and set what readers can see.')
+    UI.make('p').class('item-meta').text(menuCount
+      ? 'Reorder, drop a group inside a menu, and set what readers can see.'
+      : 'Create a menu folder first — then use each row’s “Inside” dropdown to nest groups under it.')
   );
 
   const list = UI.make('div').class('index-editor');
@@ -144,7 +154,6 @@ function renderIndexEditor() {
   rows.forEach(({ group, depth }) => {
     const siblings = groupChildren(group.parentId || null);
     const pos = siblings.indexOf(group);
-    const prev = siblings[pos - 1];
 
     const row = UI.make('div').class('index-row').style({ marginLeft: (depth * 22) + 'px' });
 
@@ -152,14 +161,23 @@ function renderIndexEditor() {
     const label = UI.make('span').class('index-name').text(group.name);
     if (group.isPublic === false) label.withChilds(UI.make('span').class('index-private').text('private'));
 
+    // Parent picker: "Top level" + every menu that isn't this node or a descendant.
+    const blocked = new Set(groupDescendantSlugs(group.slug));
+    const parentSel = UI.make('select').class('idx-parent').attrs({ title: 'Move inside a menu' }).execute(sel => {
+      sel.appendChild(new Option('Top level', ''));
+      (State.data.groups || []).filter(g => g.type === 'menu' && !blocked.has(g.slug))
+        .forEach(m => sel.appendChild(new Option('in: ' + m.name, m.slug)));
+      sel.value = group.parentId || '';
+      if (sel.options.length <= 1) sel.disabled = true;   // no menus to move into yet
+    }).on('change', e => { _reparent(group, e.target.value || null); renderIndexEditor(); });
+
     const open = UI.make('button').class('idx-btn').innerHTML(Icons.label('settings', '')).attrs({ title: 'Settings' })
       .on('click', () => openGroupSettings(group.slug));
 
     const actions = UI.make('div').class('index-actions').withChilds(
-      _idxBtn('↑', 'Move up',      pos > 0,                   () => { _swapSiblings(group, -1); renderIndexEditor(); }),
-      _idxBtn('↓', 'Move down',    pos < siblings.length - 1, () => { _swapSiblings(group, 1);  renderIndexEditor(); }),
-      _idxBtn('→', 'Nest under previous menu', !!prev && prev.type === 'menu', () => { _indent(group, prev); renderIndexEditor(); }),
-      _idxBtn('←', 'Move out one level',       !!group.parentId,               () => { _outdent(group); renderIndexEditor(); }),
+      _idxBtn('↑', 'Move up',   pos > 0,                   () => { _swapSiblings(group, -1); renderIndexEditor(); }),
+      _idxBtn('↓', 'Move down', pos < siblings.length - 1, () => { _swapSiblings(group, 1);  renderIndexEditor(); }),
+      parentSel,
       _idxBtn(group.isPublic === false ? 'Show' : 'Hide', 'Toggle public', true, () => {
         group.isPublic = group.isPublic === false; saveData(); buildSidebar(); renderIndexEditor();
       }),
@@ -181,6 +199,17 @@ function _idxBtn(glyph, title, enabled, onClick) {
   return b;
 }
 
+// Quick-create a menu folder from the index editor (the only node type that can
+// hold other groups), so nesting is reachable without leaving the screen.
+function _addMenuFolder() {
+  const name = (prompt('Name for the new menu folder:') || '').trim();
+  if (!name) return;
+  const slug = slugify(name);
+  if (getGroup(slug)) { alert('"' + name + '" already exists.'); return; }
+  State.data.groups.push({ name, slug, type: 'menu', isPublic: true });
+  saveData(); buildSidebar(); renderIndexEditor();
+}
+
 // Swap a node with its previous/next sibling inside data.groups (dir = -1 | +1).
 function _swapSiblings(group, dir) {
   const siblings = groupChildren(group.parentId || null);
@@ -193,26 +222,14 @@ function _swapSiblings(group, dir) {
   saveData(); buildSidebar();
 }
 
-// Nest a node under the menu immediately above it; place it right after that menu.
-function _indent(group, prevMenu) {
-  group.parentId = prevMenu.slug;
-  _moveAfter(group, prevMenu);
-  saveData(); buildSidebar();
-}
-
-// Lift a node to its grandparent; place it right after its old parent.
-function _outdent(group) {
-  const parent = group.parentId ? getGroup(group.parentId) : null;
-  if (!parent) return;
-  group.parentId = parent.parentId || null;
-  _moveAfter(group, parent);
-  saveData(); buildSidebar();
-}
-
-function _moveAfter(group, ref) {
+// Move a node into a menu (or back to top level) and drop it at the bottom of
+// its new siblings; the user can fine-tune order with the up/down arrows.
+function _reparent(group, newParentId) {
+  group.parentId = newParentId || null;
   const arr = State.data.groups;
   arr.splice(arr.indexOf(group), 1);
-  arr.splice(arr.indexOf(ref) + 1, 0, group);
+  arr.push(group);
+  saveData(); buildSidebar();
 }
 
 /* ── Menu (folder) landing view ───────────────────────────────── */

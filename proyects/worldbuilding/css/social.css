@@ -356,3 +356,8 @@ textarea.field-input { resize: vertical; font-family: inherit; }
 }
 .idx-btn:hover:not([disabled]) { background: #2a3346; color: #fff; }
 .idx-btn[disabled] { opacity: 0.3; cursor: default; }
+.idx-parent {
+  background: #1e2937; border: 1px solid var(--border); color: var(--text-secondary);
+  font-size: 12px; height: 28px; padding: 0 6px; border-radius: 6px; cursor: pointer; max-width: 150px;
+}
+.idx-parent:disabled { opacity: 0.4; cursor: default; }

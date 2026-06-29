@@ -6,7 +6,7 @@
  * relies on globals defined by earlier files (state → cloud → data → views …).
  */
 (function () {
-  const VERSION = '10';
+  const VERSION = '11';
 
   const FILES = [
     'lib/marked.min.js',
