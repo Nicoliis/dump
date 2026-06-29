@@ -18,8 +18,8 @@ function bindRefLinks(container) {
 }
 
 function navigateToRef(slug) {
-  for (const group of State.data.groups) {
-    const idx = group.items.findIndex(item => slugify(item.name) === slug);
+  for (const group of (State.data?.groups || [])) {
+    const idx = (group.items || []).findIndex(item => slugify(item.name) === slug);
     if (idx !== -1) { navigateToItem(group.slug, idx); return; }
   }
   alert('Item not found: ' + slug);

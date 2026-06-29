@@ -1,7 +1,8 @@
 /**
- * Edit mode  → plain textarea (raw markdown)
- * View mode  → rendered HTML only
- * onChange(val) is called on every keystroke in edit mode.
+ * Markdown panel.
+ *   Edit mode → toolbar (headings, rule, formatting, reference inserter) + textarea.
+ *   View mode → rendered HTML only.
+ * onChange(val) is called whenever the text changes (typing or toolbar).
  */
 function makeMdPanel(content, onChange) {
   if (!State.editMode || typeof onChange !== 'function') {
@@ -12,7 +13,134 @@ function makeMdPanel(content, onChange) {
     return div;
   }
 
-  const ta = UI.make('textarea').class('md-textarea').value(content);
-  ta.on('input', () => onChange(ta.getElement().value));
-  return ta.getElement();
+  const ta = UI.make('textarea').class('md-textarea').value(content).getElement();
+  ta.addEventListener('input', () => onChange(ta.value));
+
+  const fire = () => onChange(ta.value);
+  const wrap = UI.make('div').class('md-panel').withChilds(
+    _mdToolbar(ta, fire),
+    ta
+  );
+  return wrap.getElement();
+}
+
+/* ── Text-editing helpers (operate on the textarea selection) ── */
+
+function _mdHeading(ta, level, fire) {
+  const v = ta.value, s = ta.selectionStart;
+  const ls = v.lastIndexOf('\n', s - 1) + 1;
+  let le = v.indexOf('\n', s); if (le === -1) le = v.length;
+  const line = v.slice(ls, le).replace(/^#{1,6}\s*/, '');
+  const prefix = '#'.repeat(level) + ' ';
+  ta.value = v.slice(0, ls) + prefix + line + v.slice(le);
+  const pos = ls + prefix.length + line.length;
+  ta.focus(); ta.setSelectionRange(pos, pos); fire();
+}
+
+function _mdLinePrefix(ta, prefix, fire) {
+  const v = ta.value, s = ta.selectionStart;
+  const ls = v.lastIndexOf('\n', s - 1) + 1;
+  ta.value = v.slice(0, ls) + prefix + v.slice(ls);
+  const pos = s + prefix.length;
+  ta.focus(); ta.setSelectionRange(pos, pos); fire();
+}
+
+function _mdWrap(ta, before, after, placeholder, fire) {
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.slice(s, e) || placeholder;
+  ta.value = ta.value.slice(0, s) + before + sel + after + ta.value.slice(e);
+  ta.focus();
+  ta.setSelectionRange(s + before.length, s + before.length + sel.length);
+  fire();
+}
+
+function _mdInsert(ta, text, fire) {
+  const s = ta.selectionStart;
+  ta.value = ta.value.slice(0, s) + text + ta.value.slice(ta.selectionEnd);
+  const pos = s + text.length;
+  ta.focus(); ta.setSelectionRange(pos, pos); fire();
+}
+
+// Insert an inline reference token. Uses the current selection as display text
+// (→ #display:Name#) or just #Name# when nothing is selected.
+function _mdInsertRef(ta, name, fire) {
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.slice(s, e).trim();
+  const token = sel ? `#${sel}:${name}#` : `#${name}#`;
+  ta.value = ta.value.slice(0, s) + token + ta.value.slice(e);
+  const pos = s + token.length;
+  ta.focus(); ta.setSelectionRange(pos, pos); fire();
+}
+
+function _mdRefItems() {
+  const out = [];
+  (State.data?.groups || []).forEach(g => (g.items || []).forEach(it => {
+    if (it.name) out.push({ name: it.name, group: g.name });
+  }));
+  return out;
+}
+
+/* ── Toolbar ── */
+
+function _mdToolbar(ta, fire) {
+  const btn = (label, title, onClick, extraClass) =>
+    UI.make('button').class('md-tool', extraClass || '').attrs({ type: 'button', title })
+      .text(label).on('click', e => { e.preventDefault(); onClick(); });
+
+  const sep = () => UI.make('span').class('md-sep');
+
+  // Reference picker (inline panel, toggled by the Reference button)
+  const refPop = UI.make('div').class('md-ref-pop', 'hidden');
+  const refBtn = btn('Reference', 'Insert a link to another entry', () => {
+    const pop = refPop.getElement();
+    const showing = !pop.classList.contains('hidden');
+    pop.classList.toggle('hidden');
+    if (!showing) _fillRefPop(refPop, ta, fire, search.getElement());
+  });
+
+  const search = UI.make('input').class('md-ref-search').attrs({ placeholder: 'Search entries…' })
+    .on('input', () => _fillRefPop(refPop, ta, fire, search.getElement(), true));
+  const refList = UI.make('div').class('md-ref-list');
+  refPop.withChilds(search, refList);
+
+  const bar = UI.make('div').class('md-toolbar').withChilds(
+    btn('H1', 'Heading 1', () => _mdHeading(ta, 1, fire)),
+    btn('H2', 'Heading 2', () => _mdHeading(ta, 2, fire)),
+    btn('H3', 'Heading 3', () => _mdHeading(ta, 3, fire)),
+    btn('H4', 'Heading 4', () => _mdHeading(ta, 4, fire)),
+    sep(),
+    btn('B', 'Bold', () => _mdWrap(ta, '**', '**', 'bold', fire), 'md-tool--b'),
+    btn('I', 'Italic', () => _mdWrap(ta, '*', '*', 'italic', fire), 'md-tool--i'),
+    btn('Code', 'Inline code', () => _mdWrap(ta, '`', '`', 'code', fire)),
+    btn('Link', 'Link', () => _mdWrap(ta, '[', '](https://)', 'text', fire)),
+    sep(),
+    btn('Quote', 'Quote', () => _mdLinePrefix(ta, '> ', fire)),
+    btn('List', 'Bullet list', () => _mdLinePrefix(ta, '- ', fire)),
+    btn('Rule', 'Horizontal rule', () => _mdInsert(ta, '\n\n---\n\n', fire)),
+    sep(),
+    refBtn
+  );
+
+  return UI.make('div').class('md-toolbar-wrap').withChilds(bar, refPop);
+}
+
+function _fillRefPop(refPop, ta, fire, searchEl, keepOpen) {
+  const list = refPop.getElement().querySelector('.md-ref-list');
+  const q = (searchEl.value || '').toLowerCase();
+  const items = _mdRefItems().filter(it => it.name.toLowerCase().includes(q));
+  list.innerHTML = '';
+  if (!items.length) {
+    list.appendChild(UI.make('div').class('md-ref-empty').text('No entries found.').getElement());
+    return;
+  }
+  items.slice(0, 50).forEach(it => {
+    list.appendChild(
+      UI.make('div').class('md-ref-item')
+        .withChilds(UI.make('span').text(it.name), UI.make('span').class('md-ref-group').text(it.group))
+        .on('click', () => {
+          _mdInsertRef(ta, it.name, fire);
+          refPop.getElement().classList.add('hidden');
+        }).getElement()
+    );
+  });
 }

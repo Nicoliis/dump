@@ -290,3 +290,38 @@ textarea.field-input { resize: vertical; font-family: inherit; }
   .seg-btn .ic { font-size: initial; }
   .suggest-input { width: 100px; }
 }
+
+/* ── Markdown editor toolbar ───────────────────────────────────── */
+.hidden { display: none !important; }
+.md-panel { display: flex; flex-direction: column; }
+.md-toolbar-wrap { position: relative; }
+.md-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  padding: 6px 8px; background: #161a25; border: 1px solid #475569;
+  border-bottom: none; border-radius: 8px 8px 0 0;
+}
+.md-tool {
+  background: transparent; border: 1px solid transparent; color: var(--text-secondary);
+  font-size: 12px; padding: 4px 8px; border-radius: 6px; cursor: pointer; line-height: 1;
+}
+.md-tool:hover { background: #2a3346; color: #fff; }
+.md-tool--b { font-weight: 800; }
+.md-tool--i { font-style: italic; }
+.md-sep { width: 1px; height: 18px; background: #334155; margin: 0 4px; }
+
+/* textarea sits flush under the toolbar */
+.md-panel .md-textarea { margin-top: 0; border-radius: 0 0 8px 8px; }
+
+/* Reference picker */
+.md-ref-pop {
+  position: absolute; top: 100%; right: 0; z-index: 600; width: min(320px, 90vw);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5); padding: 8px; margin-top: 4px;
+}
+.md-ref-search { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #475569; border-radius: 8px; color: var(--text); font-size: 13px; margin-bottom: 6px; }
+.md-ref-search:focus { outline: none; border-color: var(--primary); }
+.md-ref-list { max-height: 240px; overflow-y: auto; }
+.md-ref-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; }
+.md-ref-item:hover { background: #2a2a44; }
+.md-ref-group { color: var(--text-muted); font-size: 11px; }
+.md-ref-empty { color: var(--text-muted); font-size: 13px; padding: 8px 10px; }
