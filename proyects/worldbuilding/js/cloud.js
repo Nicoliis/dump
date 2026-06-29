@@ -60,7 +60,9 @@ const Cloud = (() => {
 
   /* ── Worlds ───────────────────────────────────────────────── */
 
-  const CARD_COLS = 'id,owner_id,title,description,tags,language,is_public,updated_at,author:profiles(username,display_name,avatar_url)';
+  // Name the FK explicitly — worlds↔profiles now has several relationships
+  // (owner_id, world_follows, world_likes), so the embed must disambiguate.
+  const CARD_COLS = 'id,owner_id,title,description,tags,language,is_public,updated_at,author:profiles!worlds_owner_id_fkey(username,display_name,avatar_url)';
 
   // Gallery: every public world plus the viewer's own (RLS enforces the same).
   async function listGallery() {
@@ -85,7 +87,7 @@ const Cloud = (() => {
   async function getWorld(id) {
     const db = _db(); if (!db || !id) return null;
     const { data, error } = await db.from('worlds')
-      .select('*, author:profiles(username,display_name,avatar_url)')
+      .select('*, author:profiles!worlds_owner_id_fkey(username,display_name,avatar_url)')
       .eq('id', id).maybeSingle();
     if (error) { console.error('getWorld', error); return null; }
     return data;
@@ -211,7 +213,7 @@ const Cloud = (() => {
     const db = _db(); const uid = _uid();
     if (!db) return [];
     const { data } = await db.from('worlds')
-      .select('owner_id, author:profiles(username,display_name,avatar_url)').eq('is_public', true);
+      .select('owner_id, author:profiles!worlds_owner_id_fkey(username,display_name,avatar_url)').eq('is_public', true);
     const following = State.following?.users || new Set();
     const by = {};
     (data || []).forEach(w => {
