@@ -61,23 +61,32 @@ function worldHasUnseen(worldId, updates) {
   return Object.keys(updates).some(k => isElementUnseen(worldId, k, updates[k]));
 }
 
+// Feed-level check: a world is "new" for the viewer only if they don't own it.
+function feedWorldUnseen(world) {
+  const uid = window.Auth?.getUser()?.id;
+  if (!world || world.owner_id === uid) return false;
+  return worldHasUnseen(world.id, world.element_updates);
+}
+
 /* ── Helpers for the currently-open world (uses State.data) ── */
 
 function homeHasUnseen() {
   const wid = State.currentWorld?.id;
-  return !!wid && isElementUnseen(wid, EL_HOME, State.data?.home?.updatedAt);
+  if (!wid || isOwner()) return false;   // your own world is never "new" to you
+  return isElementUnseen(wid, EL_HOME, State.data?.home?.updatedAt);
 }
 
 function groupHasUnseen(group) {
   const wid = State.currentWorld?.id;
-  if (!wid) return false;
+  if (!wid || isOwner()) return false;
   if (group.type === 'text') return isElementUnseen(wid, elKeyText(group.slug), group.updatedAt);
   return (group.items || []).some(it => it.id && isElementUnseen(wid, elKeyItem(group.slug, it.id), it.updatedAt));
 }
 
 function itemIsUnseen(groupSlug, item) {
   const wid = State.currentWorld?.id;
-  return !!wid && !!item.id && isElementUnseen(wid, elKeyItem(groupSlug, item.id), item.updatedAt);
+  if (!wid || isOwner()) return false;
+  return !!item.id && isElementUnseen(wid, elKeyItem(groupSlug, item.id), item.updatedAt);
 }
 
 /* ── Mark-on-leave ── */

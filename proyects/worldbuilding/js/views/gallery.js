@@ -31,8 +31,8 @@ function _renderTabs(main) {
       .innerHTML(Icons.label(icon, text) + (badge ? `<span class="tab-badge">${badge}</span>` : ''))
       .on('click', () => { State.homeTab = key; _renderTabs(main); });
 
-  // Count of followed worlds that still have unseen updates.
-  const unread = (_feedCache || []).filter(w => worldHasUnseen(w.id, w.element_updates)).length;
+  // Count of followed worlds (not your own) that still have unseen updates.
+  const unread = (_feedCache || []).filter(feedWorldUnseen).length;
 
   const following = mk('following', 'bell', 'Following', unread || '').id('tab-following');
   tabs.withChilds(following, mk('discover', 'compass', 'Discover', ''), mk('mine', 'book', 'My Worlds', ''));
@@ -78,7 +78,7 @@ async function _renderFeed(body, uid) {
 function _updateFollowingBadge() {
   const tab = document.getElementById('tab-following');
   if (!tab) return;
-  const n = (_feedCache || []).filter(w => worldHasUnseen(w.id, w.element_updates)).length;
+  const n = (_feedCache || []).filter(feedWorldUnseen).length;
   let b = tab.querySelector('.tab-badge');
   if (n > 0) {
     if (!b) { b = document.createElement('span'); b.className = 'tab-badge'; tab.appendChild(b); }
@@ -87,7 +87,7 @@ function _updateFollowingBadge() {
 }
 
 function _feedRow(w) {
-  const isNew = worldHasUnseen(w.id, w.element_updates);
+  const isNew = feedWorldUnseen(w);
   const author = w.author || {};
   const name = author.display_name || author.username || 'Unknown';
 
