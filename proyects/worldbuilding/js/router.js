@@ -93,6 +93,7 @@ function navigateToNewItem(groupSlug) {
 /* ── Topbar chrome: path label + which controls are visible ───── */
 
 function _chrome() {
+  document.body.classList.remove('sidebar-open'); // close the mobile drawer on any navigation
   const inWorld = !!State.currentWorld;
   const owner   = isOwner();
   const show = (id, on) => { const el = UI.get(id); if (el) el.style.display = on ? '' : 'none'; };

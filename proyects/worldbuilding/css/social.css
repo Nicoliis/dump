@@ -192,7 +192,7 @@ body.mode-world .world-header-title { font-family: Georgia, "Iowan Old Style", s
 
 .tag-filter     { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 
-.world-grid     { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.world-grid     { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; }
 .world-card     { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; display: flex; flex-direction: column; gap: 10px; }
 .world-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
 .world-card-head  { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
@@ -239,3 +239,54 @@ textarea.field-input { resize: vertical; font-family: inherit; }
 /* ── Visibility switch ─────────────────────────────────────────── */
 .switch-row     { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: var(--text-secondary); }
 .switch-row input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+/* ════════════════════════════════════════════════════════════════
+   Mobile — drawer sidebar, condensed topbar, reflowed grids
+   ════════════════════════════════════════════════════════════════ */
+.hamburger { display: none; }
+.sidebar-backdrop { display: none; }
+
+/* Card grids never wider than their container */
+.list-view { grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+
+@media (max-width: 720px) {
+  /* World sidebar becomes an off-canvas drawer */
+  body.mode-world .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; height: 100vh;
+    width: min(82vw, 280px); transform: translateX(-100%);
+    transition: transform 0.25s ease; z-index: 1000;
+    box-shadow: 6px 0 28px rgba(0,0,0,0.55);
+  }
+  body.mode-world.sidebar-open .sidebar { transform: translateX(0); }
+  body.mode-world .hamburger { display: inline-flex; }
+  .sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+  body.sidebar-open .sidebar-backdrop { display: block; }
+
+  /* Condense the topbar so everything fits one row */
+  .topbar { padding: 0 10px; gap: 6px; }
+  .topbar-left, .topbar-right { gap: 6px; }
+  .brand { font-size: 0; padding: 6px; }          /* keep the mark, drop the wordmark */
+  .breadcrumb { display: none; }
+  .search { width: auto; flex: 1 1 60px; min-width: 0; padding: 7px 12px; }
+  .user-name { display: none; }
+  .seg-btn { padding: 5px 9px; }
+
+  /* Content + headings */
+  .content { padding: 16px 14px; }
+  .home { gap: 18px; }
+  .gallery-head h1 { font-size: 24px; }
+  .world-header-title, .world-header .world-header-title { font-size: 26px; }
+  .profile-header { flex-wrap: wrap; }
+  .profile-header h1 { font-size: 22px; }
+
+  /* Dropdown panels stay within the viewport */
+  .dropdown-panel { right: 0; max-width: calc(100vw - 20px); }
+  .notif-panel { width: min(340px, calc(100vw - 20px)); }
+}
+
+/* Very small screens: View/Edit toggle becomes icon-only */
+@media (max-width: 460px) {
+  .seg-btn { font-size: 0; padding: 6px 8px; }
+  .seg-btn .ic { font-size: initial; }
+  .suggest-input { width: 100px; }
+}

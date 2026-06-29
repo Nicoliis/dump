@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="css/base.css?v=2">
   <link rel="stylesheet" href="css/layout.css?v=2">
   <link rel="stylesheet" href="css/components.css?v=2">
-  <link rel="stylesheet" href="css/social.css?v=5">
+  <link rel="stylesheet" href="css/social.css?v=6">
 
 	<!-- Nicotols login gate -->
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,6 +19,7 @@
 	<script>AuthGate.protect();</script>
 </head>
 <body class="mode-social">
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
   <aside class="sidebar">
     <div class="logo">StoryForge</div>
     <nav class="menu" id="menu"></nav>
@@ -28,6 +29,7 @@
   <div class="main">
     <header class="topbar">
       <div class="topbar-left">
+        <button class="icon-btn hamburger" id="nav-toggle" data-icon="menu" aria-label="Menu"></button>
         <button class="brand" id="brand"><span class="brand-mark" data-icon="book"></span> StoryForge</button>
         <span class="breadcrumb" id="breadcrumb"></span>
         <input class="search" id="search-input" type="text" placeholder="Search this world…">
@@ -72,6 +74,6 @@
   </div>
 
   <!-- One loader injects all app scripts in order; bump VERSION in loader.js to cache-bust. -->
-  <script src="js/loader.js?v=5"></script>
+  <script src="js/loader.js?v=6"></script>
 </body>
 </html>

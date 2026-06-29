@@ -92,6 +92,13 @@ function _wireTopbar() {
   Icons.apply();  // fill static [data-icon] placeholders in the topbar
   UI.get('brand').addEventListener('click', () => goGallery());
 
+  // Mobile sidebar drawer
+  UI.get('nav-toggle').addEventListener('click', e => {
+    e.stopPropagation();
+    document.body.classList.toggle('sidebar-open');
+  });
+  UI.get('sidebar-backdrop').addEventListener('click', () => document.body.classList.remove('sidebar-open'));
+
   _wireDropdown('world-menu-wrap', 'world-menu-btn');
   _wireDropdown('user-menu-wrap',  'user-trigger');
 
