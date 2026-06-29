@@ -1,5 +1,6 @@
-function makeItemCard(item, onClick) {
+function makeItemCard(item, onClick, isNew) {
   const card = UI.make('div').class('item-card').on('click', onClick);
+  if (isNew) card.withChilds(UI.make('span').class('card-new').text('new'));
   card.withChilds(UI.make('div').class('item-name').text(item.name));
 
   if (item.content) {

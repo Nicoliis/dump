@@ -26,22 +26,16 @@ function _renderTabs(main) {
   const tabs = UI.make('div').class('home-tabs');
   const body = UI.make('div').class('home-tabbody');
 
-  const mk = (key, icon, text, badge) => {
-    const b = UI.make('button').class('home-tab', State.homeTab === key ? 'home-tab--on' : '')
+  const mk = (key, icon, text, badge) =>
+    UI.make('button').class('home-tab', State.homeTab === key ? 'home-tab--on' : '')
       .innerHTML(Icons.label(icon, text) + (badge ? `<span class="tab-badge">${badge}</span>` : ''))
       .on('click', () => { State.homeTab = key; _renderTabs(main); });
-    return b;
-  };
 
-  // unread feed count (worlds updated since last visit)
-  const seen = getFeedSeen();
-  const unread = (_feedCache || []).filter(w => new Date(w.updated_at).getTime() > seen).length;
+  // Count of followed worlds that still have unseen updates.
+  const unread = (_feedCache || []).filter(w => worldHasUnseen(w.id, w.element_updates)).length;
 
-  tabs.withChilds(
-    mk('following', 'bell', 'Following', unread || ''),
-    mk('discover', 'compass', 'Discover', ''),
-    mk('mine', 'book', 'My Worlds', '')
-  );
+  const following = mk('following', 'bell', 'Following', unread || '').id('tab-following');
+  tabs.withChilds(following, mk('discover', 'compass', 'Discover', ''), mk('mine', 'book', 'My Worlds', ''));
   main.withChilds(tabs, body);
 
   if (State.homeTab === 'following')      _renderFeed(body, uid);
@@ -63,7 +57,6 @@ async function _renderFeed(body, uid) {
   if (muted.size) items = items.filter(w => !(w.tags || []).some(t => muted.has(t)));
   _feedCache = items;
   _likeCounts = await Cloud.likeCounts(items.map(w => w.id));
-  const seen = getFeedSeen();
   el.innerHTML = '';
 
   if (!items.length) {
@@ -73,20 +66,28 @@ async function _renderFeed(body, uid) {
       UI.make('button').class('btn-primary').innerHTML(Icons.label('compass', 'Explore worlds'))
         .on('click', () => { State.homeTab = 'discover'; renderGallery(); })
     ).getElement());
+    _updateFollowingBadge();
     return;
   }
 
-  items.forEach(w => el.appendChild(_feedRow(w, seen)));
-
-  // Mark everything seen now that the feed has been viewed.
-  setFeedSeen(Date.now());
-  // Refresh the tab badge (it should now read zero).
-  const badge = document.querySelector('.home-tab--on .tab-badge');
-  if (badge) badge.remove();
+  items.forEach(w => el.appendChild(_feedRow(w)));
+  _updateFollowingBadge();
 }
 
-function _feedRow(w, seen) {
-  const isNew = new Date(w.updated_at).getTime() > seen;
+// Reflect the live unseen count on the Following tab.
+function _updateFollowingBadge() {
+  const tab = document.getElementById('tab-following');
+  if (!tab) return;
+  const n = (_feedCache || []).filter(w => worldHasUnseen(w.id, w.element_updates)).length;
+  let b = tab.querySelector('.tab-badge');
+  if (n > 0) {
+    if (!b) { b = document.createElement('span'); b.className = 'tab-badge'; tab.appendChild(b); }
+    b.textContent = String(n);
+  } else if (b) { b.remove(); }
+}
+
+function _feedRow(w) {
+  const isNew = worldHasUnseen(w.id, w.element_updates);
   const author = w.author || {};
   const name = author.display_name || author.username || 'Unknown';
 

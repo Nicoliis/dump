@@ -130,6 +130,13 @@ body.mode-world .follow-btn--on { color: #2a2008; }
 .follow-btn--sm { font-size: 12px; padding: 5px 10px; }
 .follow-btn--icon { padding: 5px 10px; }
 
+/* Per-element "new" indicators */
+.menu-item { justify-content: space-between; }
+.menu-dot  { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.item-card { position: relative; }
+.card-new  { position: absolute; top: 10px; right: 10px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.3px; }
+body.mode-world .card-new { color: #2a2008; }
+
 /* Profile follow stats */
 .profile-stats { display: flex; gap: 20px; margin-top: 12px; font-size: 14px; }
 .profile-stats strong { font-weight: 700; }

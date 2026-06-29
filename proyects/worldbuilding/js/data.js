@@ -54,11 +54,6 @@ function timeAgo(iso) {
   return Math.floor(s / 604800) + 'w';
 }
 
-// Per-user "last time the feed was viewed", for the "new" badges.
-function _feedSeenKey() { return 'wb:feedSeen:' + (window.Auth?.getUser()?.id || ''); }
-function getFeedSeen()  { return +(localStorage.getItem(_feedSeenKey()) || 0); }
-function setFeedSeen(ts){ localStorage.setItem(_feedSeenKey(), String(ts)); }
-
 function refDisplay(r) { const i = r.indexOf(':'); return i >= 0 ? r.slice(0, i) : r; }
 function refKey(r)     { const i = r.indexOf(':'); return i >= 0 ? r.slice(i+1) : r; }
 

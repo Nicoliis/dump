@@ -13,7 +13,7 @@ function renderHome() {
     wrap.withChilds(
       UI.make('button').class('btn-primary').text('Save Home')
         .style({ marginTop: '14px' })
-        .on('click', () => { State.data.home.content = homeValue; saveData(); })
+        .on('click', () => { State.data.home.content = homeValue; State.data.home.updatedAt = nowISO(); saveData(); })
     );
   }
 

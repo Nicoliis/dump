@@ -48,6 +48,9 @@ function _boot() {
   _wired = true;
   _wireTopbar();
 
+  // Closing/reloading while viewing an element still counts as having seen it.
+  window.addEventListener('beforeunload', () => leaveCurrentElement());
+
   if (window.Auth) {
     Auth.onChange(async ({ user }) => {
       if (!user) { _booted = false; return; }

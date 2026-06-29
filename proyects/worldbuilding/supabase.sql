@@ -90,6 +90,9 @@ create policy "users manage own user_follows" on user_follows
 alter table worlds   add column if not exists language   text not null default 'en';
 alter table profiles add column if not exists muted_tags text[] default '{}';
 
+-- Per-element update timestamps { elementKey: ISO } for granular "new" tracking.
+alter table worlds add column if not exists element_updates jsonb default '{}'::jsonb;
+
 -- ── Likes ──────────────────────────────────────────────────────────────────
 create table if not exists world_likes (
   user_id    uuid not null references profiles(id) on delete cascade,

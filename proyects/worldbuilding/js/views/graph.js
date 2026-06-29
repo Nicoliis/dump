@@ -13,7 +13,7 @@ function renderGraph(group) {
   const chronoGrid = UI.make('div').class('list-view');
   sorted.forEach(({ item, i }) =>
     chronoGrid.withChilds(UI.make('div').execute(el =>
-      el.appendChild(makeItemCard(item, () => navigateToItem(group.slug, i)))
+      el.appendChild(makeItemCard(item, () => navigateToItem(group.slug, i), itemIsUnseen(group.slug, item)))
     ))
   );
   if (State.editMode)

@@ -62,7 +62,7 @@ const Cloud = (() => {
 
   // Name the FK explicitly — worlds↔profiles now has several relationships
   // (owner_id, world_follows, world_likes), so the embed must disambiguate.
-  const CARD_COLS = 'id,owner_id,title,description,tags,language,is_public,updated_at,author:profiles!worlds_owner_id_fkey(username,display_name,avatar_url)';
+  const CARD_COLS = 'id,owner_id,title,description,tags,language,is_public,updated_at,element_updates,author:profiles!worlds_owner_id_fkey(username,display_name,avatar_url)';
 
   // Gallery: every public world plus the viewer's own (RLS enforces the same).
   async function listGallery() {
@@ -115,6 +115,7 @@ const Cloud = (() => {
       language: world.language,
       is_public: world.is_public,
       data: world.data,
+      element_updates: collectElementUpdates(world.data),
       updated_at: new Date().toISOString(),
     }).eq('id', world.id);
     if (error) console.error('saveWorld failed', error);

@@ -20,6 +20,7 @@ function _saveDetail() {
   if (group.type === 'graph')
     item.parents = _detailParents ? _detailParents.getParents() : (item.parents || []);
 
+  item.updatedAt = nowISO();   // stamp for granular "new" tracking
   if (isNew) group.items.push(item);
   saveData();
   navigate(groupSlug);

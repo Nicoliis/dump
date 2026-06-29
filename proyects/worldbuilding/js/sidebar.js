@@ -42,10 +42,15 @@ function _groupSection(menu, title, groups) {
 }
 
 function makeMenuItem(label, slug) {
-  return UI.make('div')
+  const item = UI.make('div')
     .class('menu-item', State.currentView === slug ? 'active' : '')
-    .text(label)
-    .on('click', () => navigate(slug));
+    .on('click', () => navigate(slug))
+    .withChilds(UI.make('span').text(label));
+
+  const unseen = slug === 'home' ? homeHasUnseen()
+               : (() => { const g = getGroup(slug); return g ? groupHasUnseen(g) : false; })();
+  if (unseen) item.withChilds(UI.make('span').class('menu-dot').attrs({ title: 'New updates' }));
+  return item;
 }
 
 // Sidebar nav entry for top-level destinations (gallery/profile/new world/back).

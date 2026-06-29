@@ -1,6 +1,7 @@
 /* ── Top-level navigation (gallery / profile / world) ─────────── */
 
 function goGallery() {
+  leaveCurrentElement();
   State.currentView = 'gallery';
   State.currentWorld = null;
   State.data = null;
@@ -11,6 +12,7 @@ function goGallery() {
 }
 
 function goProfile(userId) {
+  leaveCurrentElement();
   State.currentView = 'profile';
   State.currentWorld = null;
   State.data = null;
@@ -22,6 +24,7 @@ function goProfile(userId) {
 }
 
 function goNewWorld() {
+  leaveCurrentElement();
   State.currentView = 'new-world';
   State.currentWorld = null;
   State.data = null;
@@ -33,6 +36,7 @@ function goNewWorld() {
 
 // Open a world by id (always starts in view mode).
 async function openWorld(id) {
+  leaveCurrentElement();   // leaving whatever element was open in the previous world
   const content = UI.get('main-content');
   content.innerHTML = '<p style="color:var(--text-muted);padding:12px">Loading world…</p>';
 
@@ -54,6 +58,7 @@ async function openWorld(id) {
 
 function openWorldSettings() {
   if (!isOwner()) return;
+  leaveCurrentElement();
   State.currentView = 'world-settings';
   State.currentItem = null;
   _chrome();
@@ -64,6 +69,7 @@ function openWorldSettings() {
 /* ── Within-world navigation ──────────────────────────────────── */
 
 function navigate(slug) {
+  leaveCurrentElement();
   State.currentView = slug;
   State.currentItem = null;
   _chrome();
@@ -72,6 +78,7 @@ function navigate(slug) {
 }
 
 function navigateToItem(groupSlug, itemIndex) {
+  leaveCurrentElement();
   State.currentView = groupSlug;
   State.currentItem = { groupSlug, itemIndex };
   _chrome();

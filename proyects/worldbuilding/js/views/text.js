@@ -11,7 +11,7 @@ function renderTextGroup(group) {
   if (State.editMode) {
     bar.withChilds(
       UI.make('button').class('btn-primary').text('Save')
-        .on('click', () => { group.content = textValue; saveData(); })
+        .on('click', () => { group.content = textValue; group.updatedAt = nowISO(); saveData(); })
     );
   }
 

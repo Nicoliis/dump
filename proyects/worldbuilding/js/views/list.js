@@ -6,7 +6,7 @@ function renderList(group) {
 
   group.items.forEach((item, i) => {
     grid.withChilds(UI.make('div').execute(el =>
-      el.appendChild(makeItemCard(item, () => navigateToItem(group.slug, i)))
+      el.appendChild(makeItemCard(item, () => navigateToItem(group.slug, i), itemIsUnseen(group.slug, item)))
     ));
   });
 
