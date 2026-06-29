@@ -41,8 +41,11 @@ function _renderUserMenu() {
 /* ── Bootstrap ────────────────────────────────────────────────── */
 
 let _booted = false;
+let _wired = false;
 
-window.addEventListener('load', () => {
+function _boot() {
+  if (_wired) return;       // loader may call this once DOM is already ready
+  _wired = true;
   _wireTopbar();
 
   if (window.Auth) {
@@ -63,7 +66,12 @@ window.addEventListener('load', () => {
   } else {
     goGallery();
   }
-});
+}
+
+// Scripts are injected by loader.js, so the window 'load' event may already have
+// fired by the time this runs — guard on readyState.
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _boot);
+else _boot();
 
 /* ── Wiring ───────────────────────────────────────────────────── */
 

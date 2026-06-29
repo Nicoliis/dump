@@ -42,7 +42,7 @@ function _worldHeader() {
   // language label
   sub.withChilds(UI.make('span').class('world-lang').innerHTML(Icons.label('globe', languageLabel(w.language))));
 
-  const count = UI.make('span').class('muted world-followers').text('');
+  const count = UI.make('span').class('muted', 'world-followers').text('');
   sub.withChilds(count);
   Cloud.worldFollowerCount(w.id).then(n =>
     count.getElement().textContent = n ? `${n} ${n === 1 ? 'follower' : 'followers'}` : '');
