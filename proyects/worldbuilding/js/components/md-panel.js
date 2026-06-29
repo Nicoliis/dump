@@ -64,10 +64,10 @@ function _mdInsert(ta, text, fire) {
 // Insert an inline reference, always in #display:reference# form so the display
 // text is independent of the entry's name. The display part is left selected so
 // the writer can immediately type their own wording.
-function _mdInsertRef(ta, name, fire) {
+function _mdInsertRef(ta, key, fire, displayDefault) {
   const s = ta.selectionStart, e = ta.selectionEnd;
-  const display = ta.value.slice(s, e).trim() || name;
-  const token = `#${display}:${name}#`;
+  const display = ta.value.slice(s, e).trim() || displayDefault || key;
+  const token = `#${display}:${key}#`;
   ta.value = ta.value.slice(0, s) + token + ta.value.slice(e);
   ta.focus();
   const dispStart = s + 1;                       // just after the opening '#'
@@ -75,11 +75,14 @@ function _mdInsertRef(ta, name, fire) {
   fire();
 }
 
+// Reference targets: every item (key = its name) plus every group/menu
+// (key = its slug, so it resolves independently of its display name).
 function _mdRefItems() {
   const out = [];
-  (State.data?.groups || []).forEach(g => (g.items || []).forEach(it => {
-    if (it.name) out.push({ name: it.name, group: g.name });
-  }));
+  (State.data?.groups || []).forEach(g => {
+    out.push({ name: g.name, key: g.slug, group: 'Section', isGroup: true });
+    (g.items || []).forEach(it => { if (it.name) out.push({ name: it.name, key: it.name, group: g.name }); });
+  });
   return out;
 }
 
@@ -152,7 +155,7 @@ function _fillRefPop(refPop, ta, fire, searchEl, close) {
     list.appendChild(
       UI.make('div').class('md-ref-item')
         .withChilds(UI.make('span').text(it.name), UI.make('span').class('md-ref-group').text(it.group))
-        .on('click', () => { _mdInsertRef(ta, it.name, fire); close(); })
+        .on('click', () => { _mdInsertRef(ta, it.key, fire, it.name); close(); })
         .getElement()
     );
   });

@@ -46,6 +46,9 @@ async function openWorld(id) {
   // Guard against an empty/legacy data blob.
   if (!world.data || !world.data.groups) world.data = Cloud.blankWorldData();
 
+  // Pull cloud "seen" state so the new-content dots reflect visits from any device.
+  await syncSeenFromCloud(world.id);
+
   State.currentWorld = world;
   State.data = world.data;
   State.editMode = false;
@@ -90,6 +93,28 @@ function navigateToNewItem(groupSlug) {
   navigateToItem(groupSlug, null);
 }
 
+// Owner-only: open a group's settings, or the whole-index structure editor.
+function openGroupSettings(slug) {
+  if (!isOwner()) return;
+  leaveCurrentElement();
+  State.settingsSlug = slug;
+  State.currentView = 'group-settings';
+  State.currentItem = null;
+  _chrome();
+  buildSidebar();
+  renderGroupSettings(getGroup(slug));
+}
+
+function openIndexEditor() {
+  if (!isOwner()) return;
+  leaveCurrentElement();
+  State.currentView = 'index-editor';
+  State.currentItem = null;
+  _chrome();
+  buildSidebar();
+  renderIndexEditor();
+}
+
 /* ── Topbar chrome: path label + which controls are visible ───── */
 
 function _chrome() {
@@ -129,6 +154,8 @@ function _setBreadcrumb() {
     const sub = State.currentView === 'home'           ? 'Home'
               : State.currentView === 'new-group'      ? 'New Group'
               : State.currentView === 'world-settings' ? 'Settings'
+              : State.currentView === 'index-editor'   ? 'Edit index'
+              : State.currentView === 'group-settings' ? ((getGroup(State.settingsSlug)?.name || 'Group') + '  ›  Settings')
               : (group?.name || State.currentView);
     path += '  ›  ' + sub;
     if (State.currentItem) {
@@ -144,12 +171,15 @@ function _setBreadcrumb() {
 
 function renderCurrentView() {
   if (State.currentView === 'world-settings') { renderWorldForm('edit'); return; }
+  if (State.currentView === 'index-editor')   { renderIndexEditor(); return; }
+  if (State.currentView === 'group-settings') { renderGroupSettings(getGroup(State.settingsSlug)); return; }
   if (State.currentItem) { renderDetailView(); return; }
   if (State.currentView === 'home') { renderHome(); return; }
   if (State.currentView === 'new-group') { renderNewGroupView(); return; }
   const group = getGroup(State.currentView);
   if (!group) return;
-  if (group.type === 'graph')     renderGraph(group);
+  if (group.type === 'menu')      renderMenu(group);
+  else if (group.type === 'graph')renderGraph(group);
   else if (group.type === 'text') renderTextGroup(group);
   else                            renderList(group);
 }

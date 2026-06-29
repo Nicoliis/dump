@@ -15,5 +15,6 @@ const State = {
   homeTab: 'following',  // 'following' | 'discover' | 'mine'
   currentView: 'gallery',
   currentItem: null,    // { groupSlug, itemIndex } or null
+  settingsSlug: null,   // group whose settings view is open (currentView==='group-settings')
   editMode: false,      // view-first; only owners can toggle on
 };

@@ -2,7 +2,9 @@ function renderGraph(group) {
   const content = UI.get('main-content');
   content.innerHTML = '';
   const wrap = UI.make('div');
-  wrap.withChilds(UI.make('h1').text(group.name));
+  wrap.withChilds(groupHeader(group));
+  const intro = groupIntroEl(group);
+  if (intro) wrap.getElement().appendChild(intro);
 
   const { levels, backEdges } = _computeLevels(group.items);
   const sorted = group.items

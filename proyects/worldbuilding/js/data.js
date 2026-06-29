@@ -27,6 +27,47 @@ function getGroup(slug) {
   return State.data?.groups.find(g => g.slug === slug) || null;
 }
 
+/* ── Index tree helpers (groups nest via parentId = parent menu's slug) ──
+   Fields are optional/back-compat: missing parentId = top level, missing
+   isPublic = public. `slug` is the immutable identity (refs/seen/routing). */
+
+// Direct children of a node (parentSlug = null for the top level), in array order.
+function groupChildren(parentSlug) {
+  return (State.data?.groups || []).filter(g => (g.parentId || null) === (parentSlug || null));
+}
+
+// A node's slug plus all descendant slugs (used to prevent cyclic re-parenting).
+function groupDescendantSlugs(slug) {
+  const out = [slug];
+  groupChildren(slug).forEach(c => out.push(...groupDescendantSlugs(c.slug)));
+  return out;
+}
+
+// Depth-first walk in display order → [{ group, depth }, …].
+function flattenGroupTree(parentSlug = null, depth = 0) {
+  const rows = [];
+  groupChildren(parentSlug).forEach(g => {
+    rows.push({ group: g, depth });
+    rows.push(...flattenGroupTree(g.slug, depth + 1));
+  });
+  return rows;
+}
+
+// Is this node visible to the current viewer? Owners see everything; others
+// don't see a private node, nor anything under a private ancestor menu.
+function isGroupVisible(group) {
+  if (!group) return false;
+  if (isOwner()) return true;
+  let g = group;
+  const seen = new Set();
+  while (g && !seen.has(g.slug)) {
+    if (g.isPublic === false) return false;
+    seen.add(g.slug);
+    g = g.parentId ? getGroup(g.parentId) : null;
+  }
+  return true;
+}
+
 // Parse a comma-separated tag string into a clean, de-duplicated array.
 function parseTags(str) {
   return [...new Set((str || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean))];

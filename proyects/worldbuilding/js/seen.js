@@ -41,6 +41,26 @@ function markElementSeen(worldId, key) {
   const m = _loadSeen();
   (m[worldId] = m[worldId] || {})[key] = nowISO();
   _saveSeen(m);
+  // Mirror to the cloud so the "visited" state follows the user across devices.
+  // Fire-and-forget: a blocked/failed write degrades to today's local-only behaviour.
+  window.Cloud?.saveSeen?.(worldId, m[worldId]).catch?.(e => console.error('saveSeen', e));
+}
+
+// Pull the cloud seen-map for a world and merge it into the local cache, keeping
+// the LATER ISO per element so neither device clobbers the other. Call on open.
+async function syncSeenFromCloud(worldId) {
+  if (!worldId || !window.Cloud?.loadSeen) return;
+  let remote;
+  try { remote = await Cloud.loadSeen(worldId); }
+  catch (e) { console.error('loadSeen', e); return; }
+  if (!remote || !Object.keys(remote).length) return;
+  const m = _loadSeen();
+  const local = (m[worldId] = m[worldId] || {});
+  let changed = false;
+  for (const k in remote) {
+    if (!local[k] || local[k] < remote[k]) { local[k] = remote[k]; changed = true; }
+  }
+  if (changed) _saveSeen(m);
 }
 
 function _seenAt(worldId, key) {

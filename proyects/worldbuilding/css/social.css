@@ -325,3 +325,34 @@ textarea.field-input { resize: vertical; font-family: inherit; }
 .md-ref-item:hover { background: #2a2a44; }
 .md-ref-group { color: var(--text-muted); font-size: 11px; }
 .md-ref-empty { color: var(--text-muted); font-size: 13px; padding: 8px 10px; }
+
+/* ── Index tree (sidebar) + group settings + index editor ──────── */
+/* Type icon next to each sidebar group; dims to match the muted labels. */
+.menu-label    { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.menu-label > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-type-ic  { opacity: 0.6; }
+.menu-item.active .menu-type-ic, .menu-item:hover .menu-type-ic { opacity: 1; }
+
+/* List/graph view header: title + Settings button on one row */
+.group-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.btn-sm { font-size: 13px; padding: 6px 12px; }
+.group-intro { margin: 4px 0 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+
+/* Index structure editor rows */
+.index-editor { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+.index-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+}
+.index-label   { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.index-type    { opacity: 0.65; }
+.index-name    { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.index-private { margin-left: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 9999px; padding: 1px 7px; }
+.index-actions { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.idx-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
+  font-size: 12px; min-width: 28px; height: 28px; padding: 0 7px; border-radius: 6px; cursor: pointer; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.idx-btn:hover:not([disabled]) { background: #2a3346; color: #fff; }
+.idx-btn[disabled] { opacity: 0.3; cursor: default; }

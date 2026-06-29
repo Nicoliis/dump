@@ -3,7 +3,7 @@ function renderDetailView() {
   const group  = getGroup(groupSlug);
   const isNew  = itemIndex === null;
   const item   = isNew
-    ? { name: '', references: [], content: '', parents: [], date: '' }
+    ? { name: '', references: [], content: group.itemTemplate || '', parents: [], date: '' }
     : group.items[itemIndex];
 
   _detailMd      = item.content || '';

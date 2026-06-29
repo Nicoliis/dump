@@ -24,6 +24,9 @@ function renderList(group) {
   }
 
   const wrap = UI.make('div');
-  wrap.withChilds(UI.make('h1').text(group.name), grid);
+  wrap.withChilds(groupHeader(group));
+  const intro = groupIntroEl(group);
+  if (intro) wrap.getElement().appendChild(intro);
+  wrap.withChilds(grid);
   content.appendChild(wrap.getElement());
 }

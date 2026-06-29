@@ -313,6 +313,29 @@ const Cloud = (() => {
     await db.from('worlds').update({ tags: next, updated_at: new Date().toISOString() }).eq('id', worldId);
   }
 
+  /* ── Per-user "seen" state (cross-device visited tracking) ── */
+
+  // The viewer's seen map for one world: { elementKey: ISO }. Empty if signed
+  // out or the row doesn't exist yet.
+  async function loadSeen(worldId) {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid || !worldId) return {};
+    const { data, error } = await db.from('element_seen')
+      .select('seen').eq('user_id', uid).eq('world_id', worldId).maybeSingle();
+    if (error) { console.error('loadSeen', error); return {}; }
+    return (data && data.seen) || {};
+  }
+
+  // Persist the viewer's full seen map for one world (fire-and-forget upsert).
+  async function saveSeen(worldId, map) {
+    const db = _db(); const uid = _uid();
+    if (!db || !uid || !worldId) return;
+    const { error } = await db.from('element_seen')
+      .upsert({ user_id: uid, world_id: worldId, seen: map || {}, updated_at: new Date().toISOString() },
+              { onConflict: 'user_id,world_id' });
+    if (error) console.error('saveSeen', error);
+  }
+
   /* ── One-time migration of the legacy single world ────────── */
 
   // Old versions stored one world in tool_data (tool='worldbuilding', key='data').
@@ -340,7 +363,7 @@ const Cloud = (() => {
     blankWorldData,
     ensureProfile, getProfile, saveProfile,
     listGallery, listByOwner, getWorld, createWorld, saveWorld, deleteWorld,
-    publishedTags, migrateLegacy,
+    publishedTags, migrateLegacy, loadSeen, saveSeen,
     loadFollowing, followWorld, followUser, userFollowCounts, worldFollowerCount,
     feed, suggestedAuthors, popularTags,
     loadLikes, likeWorld, worldLikeCount, likeCounts,

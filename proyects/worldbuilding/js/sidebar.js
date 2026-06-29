@@ -24,32 +24,54 @@ function buildSidebar() {
 
   const coreSection = UI.make('div').class('menu-section');
   coreSection.withChilds(UI.make('h3').text('Core'));
-  coreSection.withChilds(makeMenuItem('Home', 'home'));
+  coreSection.withChilds(makeHomeItem());
+  if (isOwner() && State.editMode)
+    coreSection.withChilds(
+      UI.make('div').class('menu-item', State.currentView === 'index-editor' ? 'active' : '')
+        .innerHTML(Icons.label('settings', 'Edit index'))
+        .on('click', () => openIndexEditor())
+    );
   menu.appendChild(coreSection.getElement());
 
-  const groups = State.data?.groups || [];
-  _groupSection(menu, 'Lists',  groups.filter(g => g.type === 'list'));
-  _groupSection(menu, 'Graphs', groups.filter(g => g.type === 'graph'));
-  _groupSection(menu, 'Texts',  groups.filter(g => g.type === 'text'));
+  // User-defined nested index (replaces the old Lists/Graphs/Texts buckets).
+  const treeEl = UI.make('div').class('menu-section').getElement();
+  groupChildren(null).forEach(g => _renderTreeNode(treeEl, g, 0));
+  menu.appendChild(treeEl);
 }
 
-function _groupSection(menu, title, groups) {
-  if (!groups.length) return;
-  const sec = UI.make('div').class('menu-section');
-  sec.withChilds(UI.make('h3').text(title));
-  groups.forEach(g => sec.withChilds(makeMenuItem(g.name, g.slug)));
-  menu.appendChild(sec.getElement());
+// Recursively render a group node and (for menus) its children, honouring
+// per-node visibility for non-owners.
+function _renderTreeNode(parentEl, group, depth) {
+  if (!isOwner() && group.isPublic === false) return;   // hidden subtree for readers
+  parentEl.appendChild(makeMenuItem(group, depth).getElement());
+  if (group.type === 'menu')
+    groupChildren(group.slug).forEach(c => _renderTreeNode(parentEl, c, depth + 1));
 }
 
-function makeMenuItem(label, slug) {
+function makeHomeItem() {
   const item = UI.make('div')
-    .class('menu-item', State.currentView === slug ? 'active' : '')
-    .on('click', () => navigate(slug))
-    .withChilds(UI.make('span').text(label));
+    .class('menu-item', State.currentView === 'home' ? 'active' : '')
+    .on('click', () => navigate('home'))
+    .withChilds(UI.make('span').text('Home'));
+  if (homeHasUnseen()) item.withChilds(UI.make('span').class('menu-dot').attrs({ title: 'New updates' }));
+  return item;
+}
 
-  const unseen = slug === 'home' ? homeHasUnseen()
-               : (() => { const g = getGroup(slug); return g ? groupHasUnseen(g) : false; })();
-  if (unseen) item.withChilds(UI.make('span').class('menu-dot').attrs({ title: 'New updates' }));
+function makeMenuItem(group, depth = 0) {
+  const item = UI.make('div')
+    .class('menu-item', State.currentView === group.slug ? 'active' : '')
+    .style({ paddingLeft: (12 + depth * 16) + 'px' })
+    .on('click', () => navigate(group.slug));
+
+  item.withChilds(
+    UI.make('span').class('menu-label').withChilds(
+      UI.make('span').class('ic', 'menu-type-ic').innerHTML(Icons.get(groupTypeIcon(group))),
+      UI.make('span').text(group.name)
+    )
+  );
+
+  if (!isOwner() && group.isPublic === false) return item;       // (defensive; subtree already skipped)
+  if (groupHasUnseen(group)) item.withChilds(UI.make('span').class('menu-dot').attrs({ title: 'New updates' }));
   return item;
 }
 

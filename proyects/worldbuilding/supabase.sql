@@ -164,6 +164,23 @@ begin
   values (v_owner, 'tag_suggestion', v_actor, p_world_id, jsonb_build_object('tag', v_tag));
 end; $$;
 
+-- ── Per-user "seen" state (cross-device "visited" tracking) ─────────────────
+-- One jsonb-per-(user,world) row mirroring the old localStorage shape
+-- { elementKey: ISO }. localStorage stays as an offline cache; this row is the
+-- canonical copy so the "new content" dots follow the user across devices.
+create table if not exists element_seen (
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  world_id   uuid not null references worlds(id)     on delete cascade,
+  seen       jsonb not null default '{}'::jsonb,     -- { elementKey: ISO }
+  updated_at timestamptz not null default now(),
+  primary key (user_id, world_id)
+);
+alter table element_seen enable row level security;
+
+drop policy if exists "users manage own seen" on element_seen;
+create policy "users manage own seen" on element_seen
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 -- ── Optional: auto-create a profile row on signup ──────────────────────────
 -- The app also creates the profile on first load (Cloud.ensureProfile), so this
 -- trigger is a convenience, not a requirement.

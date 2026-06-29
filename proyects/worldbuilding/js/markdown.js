@@ -18,9 +18,13 @@ function bindRefLinks(container) {
 }
 
 function navigateToRef(slug) {
-  for (const group of (State.data?.groups || [])) {
-    const idx = (group.items || []).findIndex(item => slugify(item.name) === slug);
-    if (idx !== -1) { navigateToItem(group.slug, idx); return; }
+  // A group/menu reference (key = slug) navigates to that section directly.
+  const group = (State.data?.groups || []).find(g => g.slug === slug);
+  if (group) { navigate(group.slug); return; }
+  // Otherwise resolve an item by its slugified name.
+  for (const g of (State.data?.groups || [])) {
+    const idx = (g.items || []).findIndex(item => slugify(item.name) === slug);
+    if (idx !== -1) { navigateToItem(g.slug, idx); return; }
   }
-  alert('Item not found: ' + slug);
+  alert('Reference not found: ' + slug);
 }
