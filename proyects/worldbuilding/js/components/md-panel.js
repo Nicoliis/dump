@@ -61,15 +61,18 @@ function _mdInsert(ta, text, fire) {
   ta.focus(); ta.setSelectionRange(pos, pos); fire();
 }
 
-// Insert an inline reference token. Uses the current selection as display text
-// (→ #display:Name#) or just #Name# when nothing is selected.
+// Insert an inline reference, always in #display:reference# form so the display
+// text is independent of the entry's name. The display part is left selected so
+// the writer can immediately type their own wording.
 function _mdInsertRef(ta, name, fire) {
   const s = ta.selectionStart, e = ta.selectionEnd;
-  const sel = ta.value.slice(s, e).trim();
-  const token = sel ? `#${sel}:${name}#` : `#${name}#`;
+  const display = ta.value.slice(s, e).trim() || name;
+  const token = `#${display}:${name}#`;
   ta.value = ta.value.slice(0, s) + token + ta.value.slice(e);
-  const pos = s + token.length;
-  ta.focus(); ta.setSelectionRange(pos, pos); fire();
+  ta.focus();
+  const dispStart = s + 1;                       // just after the opening '#'
+  ta.setSelectionRange(dispStart, dispStart + display.length);
+  fire();
 }
 
 function _mdRefItems() {
@@ -91,17 +94,29 @@ function _mdToolbar(ta, fire) {
 
   // Reference picker (inline panel, toggled by the Reference button)
   const refPop = UI.make('div').class('md-ref-pop', 'hidden');
-  const refBtn = btn('Reference', 'Insert a link to another entry', () => {
-    const pop = refPop.getElement();
-    const showing = !pop.classList.contains('hidden');
-    pop.classList.toggle('hidden');
-    if (!showing) _fillRefPop(refPop, ta, fire, search.getElement());
-  });
-
-  const search = UI.make('input').class('md-ref-search').attrs({ placeholder: 'Search entries…' })
-    .on('input', () => _fillRefPop(refPop, ta, fire, search.getElement(), true));
+  const search = UI.make('input').class('md-ref-search').attrs({ placeholder: 'Search entries…' });
   const refList = UI.make('div').class('md-ref-list');
   refPop.withChilds(search, refList);
+
+  const pop = refPop.getElement();
+  const searchEl = search.getElement();
+  function closeRef() { pop.classList.add('hidden'); document.removeEventListener('click', onDocClick); }
+  function onDocClick(e) { if (!pop.contains(e.target) && e.target !== refBtnEl) closeRef(); }
+  function openRef() {
+    pop.classList.remove('hidden');
+    searchEl.value = '';
+    _fillRefPop(refPop, ta, fire, searchEl, closeRef);
+    searchEl.focus();                                  // focus the search on open
+    setTimeout(() => document.addEventListener('click', onDocClick), 0); // close on outside click
+  }
+  search.on('input', () => _fillRefPop(refPop, ta, fire, searchEl, closeRef));
+
+  const refBtn = UI.make('button').class('md-tool').attrs({ type: 'button', title: 'Insert a link to another entry' })
+    .text('Reference').on('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      pop.classList.contains('hidden') ? openRef() : closeRef();
+    });
+  const refBtnEl = refBtn.getElement();
 
   const bar = UI.make('div').class('md-toolbar').withChilds(
     btn('H1', 'Heading 1', () => _mdHeading(ta, 1, fire)),
@@ -124,7 +139,7 @@ function _mdToolbar(ta, fire) {
   return UI.make('div').class('md-toolbar-wrap').withChilds(bar, refPop);
 }
 
-function _fillRefPop(refPop, ta, fire, searchEl, keepOpen) {
+function _fillRefPop(refPop, ta, fire, searchEl, close) {
   const list = refPop.getElement().querySelector('.md-ref-list');
   const q = (searchEl.value || '').toLowerCase();
   const items = _mdRefItems().filter(it => it.name.toLowerCase().includes(q));
@@ -137,10 +152,8 @@ function _fillRefPop(refPop, ta, fire, searchEl, keepOpen) {
     list.appendChild(
       UI.make('div').class('md-ref-item')
         .withChilds(UI.make('span').text(it.name), UI.make('span').class('md-ref-group').text(it.group))
-        .on('click', () => {
-          _mdInsertRef(ta, it.name, fire);
-          refPop.getElement().classList.add('hidden');
-        }).getElement()
+        .on('click', () => { _mdInsertRef(ta, it.name, fire); close(); })
+        .getElement()
     );
   });
 }
