@@ -25,6 +25,7 @@ async function renderProfile(userId) {
   const wrap = UI.make('div').class('profile-view');
   wrap.withChilds(isMe ? _editableHeader(profile, counts) : _readonlyHeader(profile, counts));
   wrap.withChilds(_favoriteTags(profile, isMe));
+  if (isMe) wrap.withChilds(_mutedTags(profile));
   wrap.withChilds(_publishedCloud(published));
   wrap.withChilds(_worldList(worlds, isMe));
   content.appendChild(wrap.getElement());
@@ -119,6 +120,27 @@ function _favoriteTags(profile, isMe) {
   const save = UI.make('button').class('btn-secondary').text('Save tags').on('click', async () => {
     try {
       const updated = await Cloud.saveProfile({ favorite_tags: parseTags(input.getElement().value) });
+      State.profile = updated;
+      msg.text('Saved').getElement().className = 'profile-msg profile-msg--ok';
+    } catch { msg.text('Save failed.').getElement().className = 'profile-msg profile-msg--err'; }
+  });
+  return sec.withChilds(
+    UI.make('div').style({ display: 'flex', gap: '10px', alignItems: 'center' }).withChilds(input, save, msg)
+  );
+}
+
+// Tags the user never wants to see in their Following feed.
+function _mutedTags(profile) {
+  const sec = UI.make('div').class('profile-section');
+  sec.withChilds(UI.make('h2').text('Muted tags'));
+  sec.withChilds(UI.make('p').class('muted').style({ marginBottom: '8px', fontSize: '13px' })
+    .text('Worlds tagged with these are hidden from your feed.'));
+  const input = UI.make('input').class('field-input').value((profile.muted_tags || []).join(', '))
+    .attrs({ placeholder: 'spoilers, grimdark (comma separated)' });
+  const msg = UI.make('span').class('profile-msg');
+  const save = UI.make('button').class('btn-secondary').text('Save muted tags').on('click', async () => {
+    try {
+      const updated = await Cloud.saveProfile({ muted_tags: parseTags(input.getElement().value) });
       State.profile = updated;
       msg.text('Saved').getElement().className = 'profile-msg profile-msg--ok';
     } catch { msg.text('Save failed.').getElement().className = 'profile-msg profile-msg--err'; }

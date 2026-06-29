@@ -13,6 +13,13 @@ function renderWorldForm(mode) {
   const tags = UI.make('input').class('field-input')
     .value((w?.tags || []).join(', ')).attrs({ placeholder: 'fantasy, magic, war (comma separated)' });
 
+  // Required language of the world's written text.
+  const language = UI.make('select').class('field-input').execute(sel => {
+    sel.appendChild(new Option('Select language…', ''));
+    LANGUAGES.forEach(l => sel.appendChild(new Option(l.label, l.code)));
+    sel.value = w?.language || '';
+  });
+
   const publicToggle = UI.make('input').ofType('checkbox').execute(el => { el.checked = !!w?.is_public; });
   const visRow = UI.make('label').class('switch-row').withChilds(
     publicToggle,
@@ -22,10 +29,13 @@ function renderWorldForm(mode) {
   async function submit() {
     const t = title.getElement().value.trim();
     if (!t) { alert('Title is required'); return; }
+    const lang = language.getElement().value;
+    if (!lang) { alert('Language is required'); return; }
     const payload = {
       title: t,
       description: description.getElement().value.trim(),
       tags: parseTags(tags.getElement().value),
+      language: lang,
       is_public: publicToggle.getElement().checked,
     };
 
@@ -53,6 +63,7 @@ function renderWorldForm(mode) {
     UI.make('div').class('field-group').style({ marginTop: '16px' })
       .withChilds(UI.make('label').text('Description'), description),
     UI.make('div').class('field-group').withChilds(UI.make('label').text('Tags'), tags),
+    UI.make('div').class('field-group').withChilds(UI.make('label').text('Language *'), language),
     UI.make('div').class('field-group').withChilds(UI.make('label').text('Visibility'), visRow)
   );
 

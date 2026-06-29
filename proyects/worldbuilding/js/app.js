@@ -83,6 +83,16 @@ function _wireTopbar() {
 
   _wireDropdown('world-menu-wrap', 'world-menu-btn');
   _wireDropdown('user-menu-wrap',  'user-trigger');
+
+  // Notifications bell: open the panel and (re)load its contents.
+  UI.get('notif-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    const wrap = UI.get('notif-wrap');
+    document.querySelectorAll('.dropdown.open').forEach(d => { if (d !== wrap) d.classList.remove('open'); });
+    const opening = !wrap.classList.contains('open');
+    wrap.classList.toggle('open');
+    if (opening) renderNotifications();
+  });
   // Any click elsewhere closes open menus (menu-item clicks bubble here too).
   document.addEventListener('click', () =>
     document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open')));

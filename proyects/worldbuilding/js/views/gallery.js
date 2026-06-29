@@ -1,6 +1,7 @@
 /* Home: a social landing page with Following / Discover / My Worlds tabs + a discovery rail. */
 
-let _galleryFilter = { text: '', tag: null };
+let _galleryFilter = { text: '', tag: null, lang: '' };
+let _likeCounts = {};   // worldId → like count, populated per list render
 
 async function renderGallery() {
   const content = UI.get('main-content');
@@ -56,8 +57,12 @@ async function _renderFeed(body, uid) {
   const el = body.getElement();
   el.innerHTML = '<p class="muted-pad">Loading your feed…</p>';
 
-  const items = await Cloud.feed();
+  let items = await Cloud.feed();
+  // Hide updates whose tags the user has muted.
+  const muted = new Set(State.profile?.muted_tags || []);
+  if (muted.size) items = items.filter(w => !(w.tags || []).some(t => muted.has(t)));
   _feedCache = items;
+  _likeCounts = await Cloud.likeCounts(items.map(w => w.id));
   const seen = getFeedSeen();
   el.innerHTML = '';
 
@@ -105,12 +110,29 @@ function _feedRow(w, seen) {
 
   if ((w.tags || []).length) {
     const tags = UI.make('div').class('world-tags');
-    w.tags.slice(0, 4).forEach(t => tags.withChilds(UI.make('span').class('tag-chip').text('#' + t)));
+    w.tags.slice(0, 5).forEach(t =>
+      tags.withChilds(UI.make('span').class('tag-chip', 'tag-chip--mutable').withChilds(
+        UI.make('span').text('#' + t),
+        UI.make('button').class('tag-mute').attrs({ title: 'Hide #' + t + ' from your feed' })
+          .innerHTML(Icons.get('eyeOff'))
+          .on('click', e => { e.stopPropagation(); _muteTag(t); })
+      )));
     meta.withChilds(tags);
   }
 
-  row.withChilds(av, meta);
+  row.withChilds(av, meta, likeButton(w.id, _likeCounts[w.id] || 0).class('like-btn--sm'));
   return row.getElement();
+}
+
+// Add a tag to the viewer's muted list and refresh the feed.
+async function _muteTag(tag) {
+  const muted = new Set(State.profile?.muted_tags || []);
+  if (muted.has(tag)) return;
+  muted.add(tag);
+  const next = [...muted];
+  if (State.profile) State.profile.muted_tags = next;
+  try { await Cloud.saveProfile({ muted_tags: next }); } catch (e) { console.error(e); }
+  if (State.homeTab === 'following') renderGallery();
 }
 
 /* ── Discover (all public worlds) ─────────────────────────────── */
@@ -119,12 +141,20 @@ async function _renderDiscover(body, uid) {
   const el = body.getElement();
   el.innerHTML = '<p class="muted-pad">Loading worlds…</p>';
   State.worlds = await Cloud.listGallery();
+  _likeCounts = await Cloud.likeCounts(State.worlds.map(w => w.id));
   el.innerHTML = '';
 
   const allTags = [...new Set(State.worlds.flatMap(w => w.tags || []))].sort();
   const search = UI.make('input').class('field-input').attrs({ placeholder: 'Search worlds…' })
     .value(_galleryFilter.text)
     .on('input', e => { _galleryFilter.text = e.target.value.toLowerCase(); _fillGrid(grid, uid); });
+
+  // language filter
+  const langSel = UI.make('select').class('field-input', 'lang-select').execute(sel => {
+    sel.appendChild(new Option('All languages', ''));
+    LANGUAGES.forEach(l => sel.appendChild(new Option(l.label, l.code)));
+    sel.value = _galleryFilter.lang;
+  }).on('change', e => { _galleryFilter.lang = e.target.value; _fillGrid(grid, uid); });
 
   const tagBar = UI.make('div').class('tag-filter');
   const mkTag = (label, value) =>
@@ -135,7 +165,7 @@ async function _renderDiscover(body, uid) {
 
   const grid = UI.make('div').class('world-grid');
   body.withChilds(
-    UI.make('div').class('gallery-filters').withChilds(search),
+    UI.make('div').class('gallery-filters').withChilds(search, langSel),
     tagBar, grid
   );
   _fillGrid(grid, uid);
@@ -146,6 +176,7 @@ function _fillGrid(gridBuilder, uid) {
   el.innerHTML = '';
   const worlds = State.worlds.filter(w => {
     if (_galleryFilter.tag && !(w.tags || []).includes(_galleryFilter.tag)) return false;
+    if (_galleryFilter.lang && w.language !== _galleryFilter.lang) return false;
     if (_galleryFilter.text) {
       const hay = (w.title + ' ' + (w.description || '')).toLowerCase();
       if (!hay.includes(_galleryFilter.text)) return false;
@@ -165,6 +196,7 @@ async function _renderMine(body, uid) {
   const el = body.getElement();
   el.innerHTML = '<p class="muted-pad">Loading…</p>';
   const mine = await Cloud.listByOwner(uid);
+  _likeCounts = await Cloud.likeCounts(mine.map(w => w.id));
   el.innerHTML = '';
 
   body.withChilds(
@@ -242,6 +274,13 @@ function _worldCard(w, uid) {
     w.tags.forEach(t => tags.withChilds(UI.make('span').class('tag-chip').text('#' + t)));
     card.withChilds(tags);
   }
+
+  // footer: language label + like button
+  const foot = UI.make('div').class('world-card-foot').withChilds(
+    UI.make('span').class('world-lang').innerHTML(Icons.label('globe', languageLabel(w.language)))
+  );
+  foot.withChilds(likeButton(w.id, _likeCounts[w.id] || 0).class('like-btn--sm'));
+  card.withChilds(foot);
 
   card.withChilds(_authorRow(w.author, w.owner_id));
   return card.getElement();
