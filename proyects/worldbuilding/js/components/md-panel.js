@@ -1,6 +1,8 @@
 /**
  * Markdown panel.
- *   Edit mode → toolbar (headings, rule, formatting, reference inserter) + textarea.
+ *   Edit mode → toolbar (formatting + a Code/Split/Preview view toggle) over a
+ *     body holding the textarea and a live preview; the toggle picks which are
+ *     shown (data-mode on .md-panel; CSS does the layout).
  *   View mode → rendered HTML only.
  * onChange(val) is called whenever the text changes (typing or toolbar).
  */
@@ -13,15 +15,46 @@ function makeMdPanel(content, onChange) {
     return div;
   }
 
-  const ta = UI.make('textarea').class('md-textarea').value(content).getElement();
-  ta.addEventListener('input', () => onChange(ta.value));
+  const panel   = UI.make('div').class('md-panel').getElement();
+  const ta      = UI.make('textarea').class('md-textarea').value(content).getElement();
+  const preview = UI.make('div').class('md-preview', 'preview-only').getElement();
 
-  const fire = () => onChange(ta.value);
-  const wrap = UI.make('div').class('md-panel').withChilds(
-    _mdToolbar(ta, fire),
-    ta
-  );
-  return wrap.getElement();
+  // Re-render the live preview from the current textarea value. Refs are styled
+  // but inert here so a stray click can't navigate away and lose unsaved edits.
+  const renderPreview = () => {
+    preview.innerHTML = renderMarkdown(ta.value);
+    preview.querySelectorAll('.ref-link').forEach(a => a.addEventListener('click', e => e.preventDefault()));
+  };
+
+  const fire = () => { onChange(ta.value); if (panel.dataset.mode !== 'code') renderPreview(); };
+  ta.addEventListener('input', fire);
+
+  // Code / Split / Preview segmented toggle.
+  const seg = UI.make('div').class('md-view-seg');
+  const segBtns = [];
+  const setMode = m => {
+    panel.dataset.mode = m;
+    segBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+    if (m !== 'code') renderPreview();
+  };
+  [['code', 'Code'], ['split', 'Split'], ['preview', 'Preview']].forEach(([m, label]) => {
+    const b = UI.make('button').class('md-view-btn').attrs({ type: 'button', 'data-mode': m, title: label + ' view' })
+      .text(label).on('click', () => setMode(m)).getElement();
+    segBtns.push(b);
+    seg.getElement().appendChild(b);
+  });
+
+  const toolbar = _mdToolbar(ta, fire).getElement();
+  toolbar.querySelector('.md-toolbar').appendChild(seg.getElement());   // sits right via margin-left:auto
+
+  const body = UI.make('div').class('md-body').getElement();
+  body.appendChild(ta);
+  body.appendChild(preview);
+
+  panel.appendChild(toolbar);
+  panel.appendChild(body);
+  setMode('code');                                                       // preserves the original default
+  return panel;
 }
 
 /* ── Text-editing helpers (operate on the textarea selection) ── */

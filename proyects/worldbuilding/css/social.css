@@ -312,6 +312,31 @@ textarea.field-input { resize: vertical; font-family: inherit; }
 /* textarea sits flush under the toolbar */
 .md-panel .md-textarea { margin-top: 0; border-radius: 0 0 8px 8px; }
 
+/* ── Code / Split / Preview view toggle ───────────────────────── */
+.md-view-seg { margin-left: auto; display: inline-flex; gap: 2px; background: #0f1117; border: 1px solid #334155; border-radius: 7px; padding: 2px; }
+.md-view-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 12px; padding: 3px 10px; border-radius: 5px; cursor: pointer; line-height: 1.4; }
+.md-view-btn:hover { color: #fff; }
+.md-view-btn.active { background: var(--primary); color: #fff; }
+
+/* Body layout is driven by data-mode on the panel */
+.md-body { display: flex; }
+.md-body > .md-textarea, .md-body > .md-preview { flex: 1 1 50%; min-width: 0; }
+.md-preview {
+  border: 1px solid #475569; border-top: none; border-radius: 0 0 8px 8px;
+  padding: 16px; min-height: 250px; max-height: 600px; overflow-y: auto; background: #161a25;
+}
+.md-panel[data-mode="code"]    .md-preview  { display: none; }
+.md-panel[data-mode="preview"] .md-textarea { display: none; }
+/* Split: square off the inner edges so the two panes read as one unit */
+.md-panel[data-mode="split"] .md-textarea { border-radius: 0 0 0 8px; }
+.md-panel[data-mode="split"] .md-preview  { border-radius: 0 0 8px 0; border-left: none; }
+
+@media (max-width: 640px) {
+  .md-panel[data-mode="split"] .md-body { flex-direction: column; }
+  .md-panel[data-mode="split"] .md-textarea { border-radius: 0; }
+  .md-panel[data-mode="split"] .md-preview  { border-left: 1px solid #475569; border-top: none; border-radius: 0 0 8px 8px; }
+}
+
 /* Reference picker */
 .md-ref-pop {
   position: absolute; top: 100%; right: 0; z-index: 600; width: min(320px, 90vw);
