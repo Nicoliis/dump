@@ -10,6 +10,19 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
 
+/* ── Global scrollbars ───────────────────────────────────────────
+   Applied to every scrollable element, not just one panel. Firefox /
+   standard via scrollbar-width|color on * and html; Chromium / Safari
+   via the ::-webkit-scrollbar pseudo-elements on *. */
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
+html { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
+
+*::-webkit-scrollbar        { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track  { background: transparent; }
+*::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.16); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); background-clip: padding-box; }
+*::-webkit-scrollbar-corner { background: transparent; }
+
 .btn-primary  { background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; }
 .btn-secondary { background: #334155; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; }
 .btn-danger   { background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; }
