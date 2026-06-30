@@ -12,7 +12,10 @@ body.mode-social .content { background:
 
 /* World: warm "tome" identity + serif reading */
 body.mode-world { --accent: #d9a441; }
-body.mode-world .logo       { color: #f0d7a3; }
+body.mode-world .sidebar    { background: linear-gradient(180deg, #231d2e 0%, #181323 100%); border-right-color: rgba(217,164,65,0.18); }
+body.mode-world .logo       { color: #f0d7a3; border-bottom-color: rgba(217,164,65,0.18); }
+body.mode-world .new-group  { background: rgba(217,164,65,0.10); border-color: rgba(217,164,65,0.3); }
+body.mode-world .new-group:hover { background: rgba(217,164,65,0.18); border-color: var(--accent); }
 body.mode-world .topbar     { border-bottom-color: rgba(217,164,65,0.35); }
 body.mode-world .content    { background:
   radial-gradient(1000px 600px at 80% -5%, rgba(217,164,65,0.06), transparent 55%), var(--bg); }
@@ -106,9 +109,10 @@ body.mode-world .badge-new { color: #2a2008; }
 .empty-state { text-align: center; padding: 48px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .empty-state .btn-primary { margin-top: 8px; }
 
-/* Discovery rail */
-.home-rail   { display: flex; flex-direction: column; gap: 24px; position: sticky; top: 12px; }
-.rail-section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; }
+/* Discovery rail — each section is a subtle card */
+.home-rail   { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 12px; }
+.rail-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 16px 6px; }
+.rail-section h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 14px; }
 .rail-row    { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .rail-person { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.3; }
 .rail-name   { font-size: 14px; font-weight: 500; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -130,9 +134,11 @@ body.mode-world .follow-btn--on { color: #2a2008; }
 .follow-btn--sm { font-size: 12px; padding: 5px 10px; }
 .follow-btn--icon { padding: 5px 10px; }
 
-/* Per-element "new" indicators */
-.menu-item { justify-content: space-between; }
-.menu-dot  { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+/* Per-element "new" indicators — dot floats to the right, label stays left */
+.menu-dot  { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-left: auto; box-shadow: 0 0 0 3px rgba(217,164,65,0.15); }
+body.mode-social .menu-dot { box-shadow: 0 0 0 3px rgba(99,102,241,0.18); }
+.menu-type-ic { opacity: 0.55; transition: opacity 0.15s; }
+.menu-item:hover .menu-type-ic, .menu-item.active .menu-type-ic { opacity: 1; }
 .item-card { position: relative; }
 .card-new  { position: absolute; top: 10px; right: 10px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.3px; }
 body.mode-world .card-new { color: #2a2008; }
@@ -352,11 +358,9 @@ textarea.field-input { resize: vertical; font-family: inherit; }
 .md-ref-empty { color: var(--text-muted); font-size: 13px; padding: 8px 10px; }
 
 /* ── Index tree (sidebar) + group settings + index editor ──────── */
-/* Type icon next to each sidebar group; dims to match the muted labels. */
+/* The group label holds the type icon + name; truncates instead of wrapping. */
 .menu-label    { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .menu-label > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.menu-type-ic  { opacity: 0.6; }
-.menu-item.active .menu-type-ic, .menu-item:hover .menu-type-ic { opacity: 1; }
 
 /* List/graph view header: title + Settings button on one row */
 .group-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
